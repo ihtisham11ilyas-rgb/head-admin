@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Elite College Management Software</title>
+<style>
+:root {
+    --primary: #2563eb; --primary-dark: #1d4ed8; --success: #16a34a; --danger: #dc2626;
+    --warning: #f59e0b; --purple: #8b5cf6; --orange: #f97316; --dark: #0f172a;
+    --gray: #64748b; --gray-light: #94a3b8; --bg: #f1f5f9; --white: #ffffff;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08); --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+    --radius: 16px; --radius-sm: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: #172033; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+
+/* LOGIN */
+#loginOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2563eb 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.login-box { background: var(--white); padding: 35px 28px; border-radius: var(--radius); width: 100%; max-width: 440px; box-shadow: 0 25px 80px rgba(0,0,0,0.35); text-align: center; animation: slideUp 0.5s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.login-box .logo { font-size: 26px; margin-bottom: 16px; font-weight: 700; }
+.login-box h1 { font-size: 24px; margin-bottom: 6px; color: var(--dark); }
+.login-box p { color: var(--gray); margin-bottom: 18px; font-size: 14px; }
+.login-box input { width: 100%; padding: 14px 16px; margin: 8px 0; border: 2px solid #e2e8f0; border-radius: var(--radius-sm); font-size: 16px; transition: 0.2s; }
+.login-box input:focus { border-color: var(--primary); outline: none; }
+.login-box button { width: 100%; padding: 14px; margin-top: 10px; border: 0; border-radius: var(--radius-sm); color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.login-box button:hover { transform: translateY(-1px); opacity: 0.95; }
+.btn-head { background: var(--danger); }
+.btn-head:hover { background: #b91c1c; }
+.btn-admin { background: var(--primary); }
+.btn-admin:hover { background: var(--primary-dark); }
+.btn-viewer { background: var(--gray); }
+.btn-viewer:hover { background: #475569; }
+#loginError { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; font-weight: 500; }
+.role-info { margin-top: 16px; padding: 14px; background: #f8fafc; border-radius: var(--radius-sm); font-size: 12px; color: #475569; text-align: left; line-height: 1.7; }
+.role-info strong.head { color: var(--danger); }
+.role-info strong.admin { color: var(--primary); }
+.login-divider { display: flex; align-items: center; margin: 14px 0; color: var(--gray-light); font-size: 12px; }
+.login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+.login-divider::before { margin-right: 10px; }
+.login-divider::after { margin-left: 10px; }
+
+/* SIDEBAR */
+.sidebar { position: fixed; width: 260px; height: 100vh; background: var(--dark); color: white; padding: 24px 16px; left: 0; top: 0; z-index: 100; transition: transform 0.3s ease; overflow-y: auto; }
+.sidebar .logo { text-align: center; font-size: 22px; font-weight: 700; margin-bottom: 32px; letter-spacing: 0.5px; }
+.sidebar .logo span { color: #38bdf8; }
+.menu button { width: 100%; border: 0; background: transparent; color: #cbd5e1; padding: 14px 16px; margin: 4px 0; text-align: left; border-radius: var(--radius-sm); cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 12px; transition: 0.2s; font-weight: 500; }
+.menu button:hover, .menu button.active { background: var(--primary); color: white; }
+.mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--dark); color: white; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 99; }
+.mobile-header .logo { font-size: 18px; font-weight: 700; }
+.mobile-header .logo span { color: #38bdf8; }
+.hamburger { background: none; border: none; color: white; font-size: 24px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+.hamburger:hover { background: rgba(255,255,255,0.1); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+.sidebar-overlay.show { display: block; }
+
+/* MAIN */
+.main { margin-left: 260px; padding: 24px; min-height: 100vh; }
+.topbar { background: var(--white); padding: 18px 24px; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: var(--shadow); flex-wrap: wrap; gap: 12px; }
+.topbar h2 { font-size: 20px; font-weight: 700; }
+.role-badge { padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; }
+.badge-head { background: #fef2f2; color: var(--danger); }
+.badge-admin { background: #eff6ff; color: var(--primary); }
+.badge-viewer { background: #f8fafc; color: var(--gray); }
+
+/* PAGES */
+.page { display: none; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* CARDS */
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.card { background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); transition: 0.2s; position: relative; overflow: hidden; }
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.card::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; }
+.card.blue::before { background: var(--primary); }
+.card.green::before { background: var(--success); }
+.card.orange::before { background: var(--warning); }
+.card.red::before { background: var(--danger); }
+.card.purple::before { background: var(--purple); }
+.card h3 { color: var(--gray); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.card h1 { margin-top: 10px; font-size: 30px; font-weight: 700; }
+
+/* SECTIONS */
+.section { background: var(--white); margin-top: 24px; padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.section-head h2 { font-size: 18px; font-weight: 700; }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
+th, td { padding: 14px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+th { background: #f8fafc; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray); white-space: nowrap; }
+tr:hover td { background: #f8fafc; }
+tr:last-child td { border-bottom: none; }
+
+/* FORM ELEMENTS */
+input, select { padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 14px; font-family: inherit; transition: 0.2s; background: var(--white); }
+input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+button { cursor: pointer; font-family: inherit; }
+.primary { border: 0; background: var(--primary); color: white; padding: 10px 18px; border-radius: 8px; font-weight: 600; transition: 0.2s; font-size: 14px; }
+.primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.success { border: 0; background: var(--success); color: white; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px; transition: 0.2s; }
+.success:hover { background: #15803d; }
+.danger { border: 0; background: var(--danger); color: white; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px; transition: 0.2s; }
+.danger:hover { background: #b91c1c; }
+.warning { border: 0; background: var(--warning); color: white; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px; transition: 0.2s; }
+.warning:hover { background: #d97706; }
+.edit-btn { border: 0; background: var(--primary); color: white; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 13px; }
+
+/* BADGES */
+.badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; white-space: nowrap; }
+.active-badge { background: #dcfce7; color: #15803d; }
+.deactive-badge { background: #fee2e2; color: #b91c1c; }
+.online-badge { background: #dbeafe; color: #1d4ed8; }
+.offline-badge { background: #f1f5f9; color: var(--gray); }
+.grade-a { background: #dcfce7; color: #15803d; }
+.grade-b { background: #dbeafe; color: #1d4ed8; }
+.grade-c { background: #fef9c3; color: #a16207; }
+.grade-d { background: #ffedd5; color: #9a3412; }
+.grade-f { background: #fee2e2; color: #b91c1c; }
+
+/* FORMS */
+.form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: end; }
+.form input, .form select { width: 100%; }
+
+/* REPORT BOX */
+.report-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.report-card { padding: 22px; background: #f8fafc; border-radius: var(--radius-sm); text-align: center; border: 1px solid #e2e8f0; transition: 0.2s; }
+.report-card:hover { background: #f1f5f9; transform: translateY(-2px); }
+.report-card p { color: var(--gray); font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.report-card h2 { margin-top: 10px; font-size: 26px; font-weight: 700; }
+
+/* FILTERS */
+.filter { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* MONTH FEE GRID */
+.month-fee-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 12px; }
+.month-fee-item { padding: 12px 8px; border-radius: 10px; text-align: center; font-size: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; font-weight: 500; background: var(--white); }
+.month-fee-item:hover { transform: scale(1.05); box-shadow: var(--shadow); }
+.month-fee-item.paid { background: #dcfce7; border-color: #86efac; color: #15803d; }
+.month-fee-item.pending { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+/* READ ONLY BANNER */
+.readonly-banner { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 14px; font-weight: 500; display: none; }
+.readonly-banner.show { display: block; animation: fadeIn 0.3s ease; }
+
+/* LOGOUT */
+.logout-btn { background: var(--danger); color: white; border: 0; padding: 8px 16px; border-radius: 8px; font-weight: 600; margin-left: 10px; font-size: 13px; transition: 0.2s; }
+.logout-btn:hover { background: #b91c1c; }
+
+/* MODALS */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.3s ease; }
+.modal-overlay.show { display: flex; opacity: 1; }
+.modal-box { background: var(--white); padding: 28px; border-radius: var(--radius); width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.3); transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-overlay.show .modal-box { transform: scale(1); }
+.modal-close { position: absolute; top: 16px; right: 18px; background: #f1f5f9; border: none; font-size: 20px; color: var(--gray); cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.modal-close:hover { background: #fee2e2; color: var(--danger); }
+
+/* TEST RESULT CARDS */
+.test-result-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; transition: 0.2s; }
+.test-result-card:hover { border-color: #cbd5e1; box-shadow: var(--shadow); }
+.test-result-card .test-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.test-result-card .test-subject { font-weight: 700; color: var(--dark); font-size: 15px; }
+.test-result-card .test-grade { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.test-result-card .test-marks { color: var(--gray); font-size: 13px; margin-top: 4px; }
+.test-result-card .test-percent { font-weight: 700; color: var(--primary); }
+
+/* PROGRESS BAR */
+.progress-bar-bg { background: #e2e8f0; border-radius: 10px; height: 10px; margin-top: 10px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+
+/* EDIT FORM */
+.edit-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.edit-form input, .edit-form select { width: 100%; }
+.edit-form button { grid-column: 1 / -1; }
+
+/* VIEWER MODE - hide admin elements */
+body.viewer .admin-only, body.viewer .head-only, body.viewer .menu button[onclick*="devicePanel"] { display: none !important; }
+
+/* ADMIN MODE - hide head-admin-only elements */
+body.admin-mode .head-only { display: none !important; }
+
+/* HEAD ADMIN MODE - hide nothing extra */
+
+/* DEVICE CARDS */
+.device-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; transition: 0.2s; }
+.device-card:hover { border-color: #cbd5e1; box-shadow: var(--shadow); }
+.device-info h4 { font-size: 15px; color: var(--dark); margin-bottom: 4px; }
+.device-info p { font-size: 13px; color: var(--gray); }
+.device-status { display: flex; align-items: center; gap: 12px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.status-dot.online { background: var(--success); box-shadow: 0 0 0 3px rgba(22,163,74,0.2); }
+.status-dot.offline { background: var(--gray-light); }
+
+/* AI CHAT */
+#aiBtn { position: fixed; right: 20px; bottom: 20px; width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--primary); color: #fff; font-size: 26px; box-shadow: 0 8px 30px rgba(37,99,235,0.45); z-index: 900; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+#aiBtn:hover { transform: scale(1.08); background: var(--primary-dark); }
+#aiBox { display: none; position: fixed; right: 20px; bottom: 90px; width: min(400px, calc(100vw - 40px)); height: min(540px, calc(100vh - 130px)); background: #fff; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 900; flex-direction: column; overflow: hidden; }
+#aiBox.open { display: flex; animation: slideUp 0.3s ease; }
+.aih { background: var(--dark); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+.aih span { font-size: 11px; color: #38bdf8; margin-left: auto; }
+.aih button { background: none; border: 0; color: #fff; font-size: 22px; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+.aih button:hover { background: rgba(255,255,255,0.1); }
+#aiMsgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; }
+.aim { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; white-space: pre-wrap; line-height: 1.5; word-wrap: break-word; }
+.aim.bot { background: #fff; border: 1px solid #e2e8f0; align-self: flex-start; border-bottom-left-radius: 4px; }
+.aim.me { background: var(--primary); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+#aiChips { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 14px 4px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+#aiChips button { border: 1px solid #cbd5e1; background: #fff; border-radius: 20px; padding: 6px 14px; font-size: 12px; cursor: pointer; color: var(--dark); font-weight: 500; transition: 0.2s; }
+#aiChips button:hover { border-color: var(--primary); color: var(--primary); }
+.aif { display: flex; gap: 10px; padding: 12px 14px; background: #fff; border-top: 1px solid #e2e8f0; }
+.aif input { flex: 1; font-size: 14px; }
+.aif button { padding: 10px 18px; }
+
+/* APPROVAL WAITING OVERLAY */
+#approvalOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2563eb 100%); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 16px; }
+#approvalOverlay.show { display: flex; }
+.approval-box { background: var(--white); border-radius: var(--radius); padding: 34px 26px; width: 100%; max-width: 470px; text-align: center; box-shadow: 0 25px 80px rgba(0,0,0,0.35); animation: slideUp 0.4s ease; }
+.spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #e2e8f0; border-top-color: var(--primary); margin: 0 auto 18px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#toastBox { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 30000; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: calc(100% - 32px); max-width: 460px; }
+.toast { background: #0f172a; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; line-height: 1.5; box-shadow: 0 10px 30px rgba(0,0,0,0.35); animation: toastIn 0.25s ease; text-align: center; word-break: break-word; }
+.toast.ok { background: #15803d; }
+.toast.err { background: #b91c1c; }
+.toast.warn { background: #b45309; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.pending-badge { background: var(--danger); color: #fff; border-radius: 20px; padding: 2px 9px; font-size: 11px; font-weight: 700; margin-left: auto; }
+.device-card code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+.admin-manage-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; margin-top: 14px; }
+.admin-manage-form input { width: 100%; }
+@media (max-width: 768px) { .admin-manage-form { grid-template-columns: 1fr; } }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-light); }
+
+/* RESPONSIVE */
+@media (max-width: 1024px) { .cards, .report-box { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); width: 280px; z-index: 101; }
+    .sidebar.open { transform: translateX(0); }
+    .mobile-header { display: flex; }
+    .main { margin-left: 0; padding: 76px 16px 24px; }
+    .topbar { padding: 14px 18px; }
+    .topbar h2 { font-size: 17px; }
+    .cards { grid-template-columns: 1fr; gap: 14px; }
+    .card { padding: 18px; }
+    .card h1 { font-size: 26px; }
+    .section { padding: 18px; margin-top: 18px; }
+    .form { grid-template-columns: 1fr; }
+    .report-box { grid-template-columns: 1fr; gap: 12px; }
+    .month-fee-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .month-fee-item { padding: 10px 4px; font-size: 11px; }
+    .edit-form { grid-template-columns: 1fr; }
+    .filter { width: 100%; }
+    .filter input, .filter select { flex: 1; min-width: 140px; }
+    .section-head { flex-direction: column; align-items: flex-start; }
+    .section-head h2 { font-size: 16px; }
+    .modal-box { padding: 20px; max-height: 85vh; }
+    .login-box { padding: 28px 20px; }
+    .login-box h1 { font-size: 22px; }
+    #aiBtn { width: 54px; height: 54px; font-size: 22px; right: 16px; bottom: 16px; }
+    #aiBox { right: 16px; bottom: 78px; width: calc(100vw - 32px); height: min(500px, calc(100vh - 110px)); }
+    .test-result-card .test-header { flex-direction: column; align-items: flex-start; }
+    .device-card { flex-direction: column; align-items: flex-start; }
+    .device-status { width: 100%; justify-content: space-between; }
+}
+@media (max-width: 480px) {
+    .month-fee-grid { grid-template-columns: repeat(3, 1fr); }
+    .topbar { flex-direction: column; align-items: flex-start; }
+    .logout-btn { margin-left: 0; margin-right: 6px; margin-top: 4px; }
+    table { font-size: 12px; }
+    th, td { padding: 10px; }
+    .badge { padding: 4px 8px; font-size: 11px; }
+}
+@media print {
+    .sidebar, .mobile-header, .topbar, .no-print, #aiBtn, #aiBox { display: none !important; }
+    .main { margin: 0 !important; padding: 0 !important; }
+    .page { display: none !important; }
+    #monthlyReport { display: block !important; }
+    body { background: white !important; }
+    .section { box-shadow: none !important; border: 1px solid #e2e8f0; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <div class="logo" style="margin-bottom:16px;font-size:26px;font-weight:700;">ELITE <span style="color:#38bdf8;">COLLEGE</span></div>
+        <h1>Secure Login</h1>
+        <p>Enter password to access the management system</p>
+        <input type="text" id="loginName" placeholder="Apna Naam (sirf Admin ke liye)" autocomplete="off">
+        <input type="password" id="loginPassword" placeholder="Enter password..." onkeypress="if(event.key==='Enter')loginEnter()">
+        <button class="btn-head" onclick="loginHead()">🔴 Head Admin Login</button>
+        <button class="btn-admin" onclick="loginAdmin()">🔐 Admin Login</button>
+        <div class="login-divider">OR</div>
+        <button class="btn-viewer" onclick="loginViewer()">👁 View Only (No Password)</button>
+        <div id="loginError">Incorrect password! Try again.</div>
+        <div class="role-info">
+            <strong class="head">Head Admin:</strong> Full access + Admin control. Kis Admin ne login kiya, approve/deactive karna.<br>
+            <strong class="admin">Admin:</strong> Naam + password likhein. Pehli baar Head Admin ki approval zaroori hai.<br>
+            <strong>Viewer:</strong> Sirf dekh sakta hai, kuch add/edit nahi kar sakta
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN APPROVAL WAITING OVERLAY -->
+<div id="approvalOverlay">
+    <div class="approval-box">
+        <div class="spinner"></div>
+        <h2 style="font-size:20px;color:#0f172a;">Approval Ka Intezar...</h2>
+        <p style="color:#64748b;font-size:14px;margin-top:10px;line-height:1.7;">
+            <strong id="approvalName">Admin</strong><br>
+            <span id="approvalText"></span>
+        </p>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:18px;font-size:13px;color:#475569;text-align:left;">
+            <div><strong>Device ID:</strong> <span id="approvalDevice">-</span></div>
+            <div style="margin-top:6px;"><strong>Status:</strong> <span id="approvalStatus">⏳ Head Admin ki approval pending</span></div>
+        </div>
+
+        <!-- HEAD ADMIN: isi screen se turant approve (mobile ke liye zaroori) -->
+        <div id="headApproveBox" style="margin-top:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px;text-align:left;">
+            <div style="font-size:13px;font-weight:700;color:#1d4ed8;margin-bottom:8px;">🔑 Head Admin yahan hain?</div>
+            <div style="font-size:12px;color:#475569;margin-bottom:10px;line-height:1.6;">
+                Head Admin ka password daal kar isi phone se turant approve kar dein — koi doosra device zaroori nahi.
+            </div>
+            <input type="password" id="headApprovePw" placeholder="Head Admin password..." autocomplete="off"
+                   style="width:100%;padding:12px 14px;border:2px solid #bfdbfe;border-radius:10px;font-size:15px;box-sizing:border-box;">
+            <button class="success" style="width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;"
+                    onclick="headApproveFromWaiting()">✅ Approve karein (isi phone se)</button>
+            <div id="headApproveMsg" style="font-size:12px;margin-top:8px;color:#b91c1c;"></div>
+        </div>
+
+        <button class="btn-viewer" style="width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;" onclick="cancelApproval()">Cancel aur wapas Login</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastBox"></div>
+
+<!-- IN-PAGE CONFIRM / TEXT MODAL (mobile par askConfirm()/prompt() block ho jate hain) -->
+<div id="askOverlay" class="modal-overlay" style="z-index:20000;">
+    <div class="modal-box" style="max-width:420px;">
+        <h2 id="askTitle" style="font-size:18px;">Confirm</h2>
+        <p id="askText2" style="color:#475569;font-size:14px;margin-top:10px;line-height:1.7;"></p>
+        <input type="text" id="askInput" style="width:100%;margin-top:14px;display:none;padding:12px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;box-sizing:border-box;">
+        <div style="display:flex;gap:10px;margin-top:18px;">
+            <button class="primary" id="askYes" style="flex:1;padding:12px;font-size:15px;">OK</button>
+            <button class="btn-viewer" id="askNo" style="flex:1;padding:12px;border:0;border-radius:10px;color:#fff;font-weight:600;font-size:15px;cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="logo">ELITE <span>COLLEGE</span></div>
+    <div style="width:40px;"></div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- STUDENT DETAIL MODAL -->
+<div id="studentModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h2 id="modalStudentName">Student Details</h2>
+        <p id="modalStudentInfo" style="color:#64748b;margin-top:4px;font-size:14px;"></p>
+        <hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;">
+        <h3 style="font-size:15px;">Monthly Fee Status (Admin: Click to toggle)</h3>
+        <div id="modalMonthFees" class="month-fee-grid"></div>
+        <hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;">
+        <h3 style="font-size:15px;">Test / Exam Results</h3>
+        <div id="modalTestResults"></div>
+        <hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;">
+        <h3 style="font-size:15px;">Summary</h3>
+        <p id="modalSummary" style="margin-top:10px;color:#334155;font-size:14px;line-height:1.6;"></p>
+    </div>
+</div>
+
+<!-- EDIT STUDENT MODAL -->
+<div id="editStudentModal" class="modal-overlay" onclick="if(event.target===this)closeEditStudentModal()">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeEditStudentModal()">×</button>
+        <h2>Edit Student</h2>
+        <p style="color:#64748b;margin-top:4px;font-size:14px;">Update student details</p>
+        <div class="edit-form">
+            <input type="hidden" id="editStudentIndex">
+            <input type="text" id="editStudentName" placeholder="Student Name">
+            <input type="text" id="editStudentClass" placeholder="Class">
+            <input type="text" id="editStudentPhone" placeholder="Phone Number">
+            <input type="number" id="editStudentFee" placeholder="Monthly Fee">
+            <button class="primary" onclick="saveEditedStudent()">💾 Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT TEST MODAL -->
+<div id="editTestModal" class="modal-overlay" onclick="if(event.target===this)closeEditTestModal()">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeEditTestModal()">×</button>
+        <h2>Edit Test Result</h2>
+        <p style="color:#64748b;margin-top:4px;font-size:14px;">Update marks (Admin only)</p>
+        <div class="edit-form">
+            <input type="hidden" id="editTestStudentId">
+            <input type="hidden" id="editTestId">
+            <input type="text" id="editTestSubject" placeholder="Subject" readonly style="background:#f1f5f9;">
+            <input type="text" id="editTestMonth" placeholder="Month" readonly style="background:#f1f5f9;">
+            <input type="number" id="editTestTotalMarks" placeholder="Total Marks">
+            <input type="number" id="editTestObtainedMarks" placeholder="Obtained Marks">
+            <button class="primary" onclick="saveEditedTest()">💾 Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="logo">ELITE <span>COLLEGE</span></div>
+    <div class="menu">
+        <button class="active" onclick="openPage('dashboard',this); if(window.innerWidth<=768)toggleSidebar();">🏠 Dashboard</button>
+        <button onclick="openPage('students',this); if(window.innerWidth<=768)toggleSidebar();">👨‍🎓 Students</button>
+        <button onclick="openPage('attendance',this); if(window.innerWidth<=768)toggleSidebar();">📋 Attendance</button>
+        <button onclick="openPage('fees',this); if(window.innerWidth<=768)toggleSidebar();">💰 Fees</button>
+        <button onclick="openPage('tests',this); if(window.innerWidth<=768)toggleSidebar();">📝 Test Reports</button>
+        <button onclick="openPage('monthlyReport',this); if(window.innerWidth<=768)toggleSidebar();">📊 Monthly Report</button>
+        <button class="head-only" onclick="openPage('devicePanel',this); if(window.innerWidth<=768)toggleSidebar();">📱 Active Devices <span id="pendingBadge" class="pending-badge" style="display:none;">0</span></button>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+    <div class="topbar">
+        <h2 id="pageTitle">College Dashboard</h2>
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div class="role-badge" id="roleBadge">👑 Head Admin</div>
+            <button class="logout-btn admin-only" onclick="backupData()" style="margin-right:4px;">💾 Backup</button>
+            <button class="logout-btn admin-only" onclick="document.getElementById('restoreFile').click()" style="margin-right:4px;">📂 Restore</button>
+            <input type="file" id="restoreFile" accept=".json" hidden onchange="restoreData(event)">
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div id="readonlyBanner" class="readonly-banner">
+        🔒 <strong>View Only Mode:</strong> Aap sirf data dekh sakte hain. Koi changes nahi kar sakte.
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="page active">
+        <div class="cards">
+            <div class="card blue"><h3>Total Students</h3><h1 id="totalStudents">0</h1></div>
+            <div class="card green"><h3>Active Students</h3><h1 id="activeStudents">0</h1></div>
+            <div class="card red"><h3>Deactive Students</h3><h1 id="deactiveStudents">0</h1></div>
+            <div class="card orange"><h3>This Month Fees</h3><h1 id="dashboardFees">Rs. 0</h1></div>
+        </div>
+        <div class="cards" style="margin-top:18px;">
+            <div class="card purple"><h3>Avg Test Percentage</h3><h1 id="avgTestPercent">0%</h1></div>
+            <div class="card blue"><h3>Total Tests</h3><h1 id="totalTests">0</h1></div>
+            <div class="card green"><h3>Top Student</h3><h1 id="topStudent" style="font-size:17px;margin-top:14px;">-</h1></div>
+            <div class="card orange"><h3>This Month Tests</h3><h1 id="monthTests">0</h1></div>
+        </div>
+        <div class="section">
+            <h2 style="font-size:18px;">College Management System</h2>
+            <p style="margin-top:14px;color:#64748b;line-height:1.7;font-size:14px;">
+                <strong>Head Admin:</strong> Sab kuch control kar sakta hai including devices.<br>
+                <strong>Admin:</strong> Students, Fees, Tests, Reports manage kar sakta hai.<br>
+                <strong>Viewer:</strong> Sirf dekh sakta hai, kuch add/edit nahi kar sakta.<br>
+                Mobile users ki session active rahegi jab tak Head Admin deactivate na kare.
+            </p>
+        </div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div id="students" class="page">
+        <div class="section">
+            <div class="section-head">
+                <h2>Student Management</h2>
+                <div class="filter">
+                    <input id="studentSearch" placeholder="Search student..." onkeyup="renderStudents()">
+                    <select id="statusFilter" onchange="renderStudents()">
+                        <option value="all">All Students</option>
+                        <option value="active">Active</option>
+                        <option value="deactive">Deactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Name</th><th>Class</th><th>Phone</th><th>Fee</th><th>Status</th><th class="admin-only">Action</th></tr>
+                    </thead>
+                    <tbody id="studentTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section admin-only">
+            <h2 style="font-size:16px;">Add New Student</h2>
+            <br>
+            <div class="form">
+                <input id="studentName" placeholder="Student Name">
+                <input id="studentClass" placeholder="Class">
+                <input id="studentPhone" placeholder="Phone Number">
+                <button class="primary" onclick="addStudent()">+ Add Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div id="attendance" class="page">
+        <div class="section">
+            <div class="section-head">
+                <h2>Daily Attendance</h2>
+                <input type="date" id="attendanceDate" onchange="renderAttendance()">
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>ID</th><th>Student</th><th>Class</th><th>Attendance</th></tr></thead>
+                    <tbody id="attendanceTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEES -->
+    <div id="fees" class="page">
+        <div class="section">
+            <div class="section-head">
+                <h2>Monthly Fees</h2>
+                <div class="filter">
+                    <select id="feeMonth" onchange="renderFees()">
+                        <option>January</option><option>February</option><option>March</option><option>April</option>
+                        <option>May</option><option>June</option><option>July</option><option>August</option>
+                        <option>September</option><option>October</option><option>November</option><option>December</option>
+                    </select>
+                    <button class="primary" onclick="openAllMonthsModal()">📋 View All Months</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Student</th><th>Class</th><th>Monthly Fee</th><th>Status</th><th class="admin-only">Action</th></tr></thead>
+                    <tbody id="feesTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEST REPORTS -->
+    <div id="tests" class="page">
+        <div class="section">
+            <div class="section-head">
+                <h2>Student Test / Exam Reports</h2>
+                <div class="filter">
+                    <select id="testStudentFilter" onchange="renderTests()"><option value="all">All Students</option></select>
+                    <select id="testMonthFilter" onchange="renderTests()">
+                        <option value="all">All Months</option>
+                        <option>January</option><option>February</option><option>March</option><option>April</option>
+                        <option>May</option><option>June</option><option>July</option><option>August</option>
+                        <option>September</option><option>October</option><option>November</option><option>December</option>
+                    </select>
+                    <select id="testClassFilter" onchange="renderTests()"><option value="all">All Classes</option></select>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Student</th><th>Class</th><th>Month</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th><th class="admin-only">Action</th></tr></thead>
+                    <tbody id="testsTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section admin-only">
+            <h2 style="font-size:16px;">Add Test Result</h2>
+            <br>
+            <div class="form" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));">
+                <select id="testStudentSelect"><option value="">Select Student</option></select>
+                <select id="testMonthSelect">
+                    <option>January</option><option>February</option><option>March</option><option>April</option>
+                    <option>May</option><option>June</option><option>July</option><option>August</option>
+                    <option>September</option><option>October</option><option>November</option><option>December</option>
+                </select>
+                <input id="testSubject" placeholder="Subject (e.g. Math)">
+                <input id="testTotalMarks" placeholder="Total Marks" type="number">
+                <input id="testObtainedMarks" placeholder="Obtained Marks" type="number">
+                <button class="primary" onclick="addTestResult()">+ Add Test Result</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MONTHLY REPORT -->
+    <div id="monthlyReport" class="page">
+        <div class="section">
+            <div class="section-head">
+                <h2>Monthly Report</h2>
+                <div class="filter no-print">
+                    <select id="reportMonth" onchange="generateReport()">
+                        <option>January</option><option>February</option><option>March</option><option>April</option>
+                        <option>May</option><option>June</option><option>July</option><option>August</option>
+                        <option>September</option><option>October</option><option>November</option><option>December</option>
+                    </select>
+                    <button class="primary" onclick="window.print()">🖨 Print Report</button>
+                </div>
+            </div>
+            <div class="report-box">
+                <div class="report-card"><p>Total Students</p><h2 id="reportTotal">0</h2></div>
+                <div class="report-card"><p>Active</p><h2 id="reportActive">0</h2></div>
+                <div class="report-card"><p>Deactive</p><h2 id="reportDeactive">0</h2></div>
+                <div class="report-card"><p>Fees Collected</p><h2 id="reportFees">Rs. 0</h2></div>
+            </div>
+            <div class="report-box" style="margin-top:15px;">
+                <div class="report-card"><p>Tests Conducted</p><h2 id="reportTests">0</h2></div>
+                <div class="report-card"><p>Avg Percentage</p><h2 id="reportAvgPercent">0%</h2></div>
+                <div class="report-card"><p>Top Grade (A)</p><h2 id="reportTopGrade">0</h2></div>
+                <div class="report-card"><p>Fail Grade (F)</p><h2 id="reportFailGrade">0</h2></div>
+            </div>
+            <br>
+            <h3 style="font-size:16px;">Student Monthly Status</h3>
+            <br>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>ID</th><th>Student</th><th>Class</th><th>Status</th><th>Fee</th><th>Test Avg %</th></tr></thead>
+                    <tbody id="reportTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEVICE PANEL (Head Admin Only) -->
+    <div id="devicePanel" class="page">
+        <div class="section">
+            <div class="section-head">
+                <h2>📱 Active Admins & Devices</h2>
+                <button class="danger" onclick="clearAllSessions()">🗑 Sab Sessions Clear</button>
+            </div>
+            <p style="color:#64748b;font-size:14px;margin-bottom:16px;">
+                Yahan aap dekh sakte hain: kis Admin ne login kiya, kab kiya, aur kis device se kiya.
+                Naye Admin ki request <strong>Approve</strong> karein, ya kisi bhi Admin / Viewer ko <strong>Deactive</strong> kar dein.
+            </p>
+            <!-- Pending Approvals -->
+            <h3 style="font-size:16px;color:var(--danger);margin-bottom:12px;">🔐 Admin Accounts (Add / Approve / Deactive)</h3>
+            <div class="filter" style="margin-bottom:12px;">
+                <input id="newAdminName" placeholder="Admin ka naam">
+                <input id="newAdminPass" type="password" placeholder="Password">
+                <button class="primary" onclick="addAdminAccountManual()">+ Naya Admin Banao</button>
+                <button id="approveEachBtn" class="warning" onclick="toggleApproveEach()">🔁 Har login par approval: OFF</button>
+            </div>
+            <div id="adminAccountsList"><div class="empty-state" style="padding:20px;">Loading...</div></div>
+            <hr style="border:0;border-top:1px solid #e2e8f0;margin:20px 0;">
+            <h3 style="font-size:16px;color:var(--warning);margin-bottom:12px;">⏳ Nayi Admin Requests (Approval Pending)</h3>
+            <div id="pendingAdminsList"><div class="empty-state" style="padding:18px;">Loading...</div></div>
+            <hr style="border:0;border-top:1px solid #e2e8f0;margin:20px 0;">
+            <!-- Viewer Sessions Section -->
+            <h3 style="font-size:16px;color:var(--primary);margin-bottom:12px;">👁 Viewers / Devices</h3>
+            <div id="activeDevicesList"><div class="empty-state" style="padding:20px;">Loading...</div></div>
+        </div>
+        <div class="section">
+            <div class="section-head"><h2>📱 Kaise Kaam Karta Hai</h2></div>
+            <div style="background:#f8fafc;border-radius:12px;padding:20px;line-height:1.8;font-size:14px;color:#475569;">
+                <p><strong>1.</strong> Admin apna naam + password daal kar login karta hai. Us ka record (naam, device, waqt) save ho jata hai.</p>
+                <p><strong>2.</strong> Naya Admin pehle <strong>Approval Pending</strong> mein aata hai — jab tak Head Admin Approve na kare, wo andar nahi ja sakta.</p>
+                <p><strong>3.</strong> Head Admin dekh sakta hai kis Admin ne login kiya, kis device se, aur kitni der pehle.</p>
+                <p><strong>4.</strong> Head Admin kisi bhi Admin / Viewer ko <strong>Deactive</strong> kar sakta hai — us ka system foran lock ho jata hai.</p>
+                <p><strong>5.</strong> Admin sirf data manage kar sakta hai, devices control nahi kar sakta.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- AI Assistant -->
+<button id="aiBtn" onclick="aiToggle()" aria-label="Open AI Assistant">🤖</button>
+<div id="aiBox">
+    <div class="aih"><b>🤖 AI Assistant</b><span id="aiMode"></span><button onclick="aiToggle()" aria-label="Close">×</button></div>
+    <div id="aiMsgs"></div>
+    <div id="aiChips"></div>
+    <div class="aif">
+        <input id="aiIn" placeholder="Ask about students, fees, results..." onkeydown="if(event.key==='Enter')aiSend()">
+        <button class="primary" onclick="aiSend()">Send</button>
+    </div>
+</div>
+
+<script>
+/* ================= SAFE MESSAGES (alert/confirm/prompt ki jagah) =================
+   Mobile app viewers me showMsg()/askConfirm()/prompt() block ho jate hain,
+   is liye sab kuch page ke andar hi dikhate hain. */
+function showMsg(text, kind) {
+    const box = document.getElementById("toastBox");
+    if(!box) { return; }
+    const d = document.createElement("div");
+    d.className = "toast" + (kind ? " " + kind : "");
+    d.textContent = String(text);
+    box.appendChild(d);
+    const ms = Math.min(6000, 2200 + String(text).length * 45);
+    setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, ms);
+}
+function askConfirm(text, onYes, title) {
+    const ov = document.getElementById("askOverlay");
+    document.getElementById("askTitle").innerText = title || "Confirm";
+    document.getElementById("askText2").innerText = text || "";
+    const inp = document.getElementById("askInput"); inp.style.display = "none";
+    ov.classList.add("show");
+    document.getElementById("askYes").onclick = function(){ ov.classList.remove("show"); if(onYes) onYes(); };
+    document.getElementById("askNo").onclick = function(){ ov.classList.remove("show"); };
+}
+function askText(title, defVal, onOk) {
+    const ov = document.getElementById("askOverlay");
+    document.getElementById("askTitle").innerText = title || "Enter";
+    document.getElementById("askText2").innerText = "";
+    const inp = document.getElementById("askInput");
+    inp.style.display = "block"; inp.value = defVal || "";
+    ov.classList.add("show");
+    setTimeout(function(){ inp.focus(); }, 120);
+    document.getElementById("askYes").onclick = function(){ ov.classList.remove("show"); if(onOk) onOk(inp.value); };
+    document.getElementById("askNo").onclick = function(){ ov.classList.remove("show"); };
+}
+
+/* ================= MOBILE SIDEBAR ================= */
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+/* ================= SECURITY & AUTH ================= */
+/* ================= PASSWORDS (YAHAN SE CHANGE KAREIN) ================= */
+const HEAD_ADMIN_PASSWORD = "ihtisham123head";   // <-- Head Admin ka password
+const ADMIN_PASSWORD      = "ihtisham123ilyas";  // <-- Admin ka password
+let role = null;
+let loginName = null;
+let isApproved = false;
+let deviceId = null;
+let sessionMonitor = null;
+let heartbeatTimer = null;
+
+/* ===== SESSION STORE (localStorage par shared, isi browser ke sab tabs/devices) ===== */
+const LS_SESSIONS = "elite_sessions_v6";
+function readSessions() {
+    try { const a = JSON.parse(localStorage.getItem(LS_SESSIONS) || "[]"); return Array.isArray(a) ? a : []; }
+    catch(e) { return []; }
+}
+function writeSessions(a) { localStorage.setItem(LS_SESSIONS, JSON.stringify(a)); }
+function findSession(id) { return readSessions().find(function(s){ return s.deviceId === id; }) || null; }
+/* status: "active" | "pending" | "deactive" */
+function statusOf(s) {
+    if(!s) return null;
+    if(s.status) return s.status;
+    return s.active === true ? "active" : "pending";
+}
+function setStatus(id, st) {
+    let sessions = readSessions();
+    const idx = sessions.findIndex(function(s){ return s.deviceId === id; });
+    if(idx >= 0) {
+        sessions[idx].status = st;
+        sessions[idx].active = (st === "active");
+        sessions[idx].approved = (st === "active");
+        if(st === "active") sessions[idx].lastActive = new Date().toISOString();
+        writeSessions(sessions);
+    }
+}
+
+async function sha256(t) {
+    if(!window.crypto || !crypto.subtle) { showMsg("Please open this file in Chrome, Edge or Firefox."); return ""; }
+    const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
+Object.defineProperty(window, "currentRole", {
+    configurable: false,
+    get: function() { return role; },
+    set: function(v) { if(v === role || v === null || ["head","admin","viewer"].includes(v)) role = v; }
+});
+
+async function tryHeadAdmin(pw) {
+    return String(pw).trim().toLowerCase() === HEAD_ADMIN_PASSWORD.toLowerCase();
+}
+async function tryAdmin(pw) {
+    return String(pw).trim().toLowerCase() === ADMIN_PASSWORD.toLowerCase();
+}
+
+/* ============================================================
+   ADMIN ACCOUNTS  (approval Admin ke account par hoti hai,
+   device par nahi - is liye device badalne se approval nahi milti)
+   status: "pending" | "active" | "deactive"
+   ============================================================ */
+const LS_ADMINS = "elite_admin_accounts_v1";
+const LS_APPROVE_EACH = "elite_approve_every_login";
+let currentAdminAccount = null;
+let pendingKind = "admin";
+
+function readAdminAccounts() {
+    try { const a = JSON.parse(localStorage.getItem(LS_ADMINS) || "[]"); return Array.isArray(a) ? a : []; }
+    catch(e) { return []; }
+}
+function writeAdminAccounts(a) { localStorage.setItem(LS_ADMINS, JSON.stringify(a)); }
+function findAdminAccount(id) { return readAdminAccounts().find(function(a){ return a.id === id; }) || null; }
+function findAdminAccountByName(name) {
+    const n = String(name || "").trim().toLowerCase();
+    return readAdminAccounts().find(function(a){ return String(a.name).trim().toLowerCase() === n; }) || null;
+}
+function nextAdminAccId() {
+    let max = 0;
+    readAdminAccounts().forEach(function(a){ const n = parseInt(String(a.id).slice(4)) || 0; if(n > max) max = n; });
+    return "ACC-" + String(max + 1).padStart(3, "0");
+}
+function setAccountStatus(id, st) {
+    const list = readAdminAccounts();
+    const i = list.findIndex(function(a){ return a.id === id; });
+    if(i < 0) return;
+    list[i].status = st;
+    list[i].updated = new Date().toISOString();
+    writeAdminAccounts(list);
+    // device sessions ka status bhi sync kar do
+    const sessions = readSessions();
+    let changed = false;
+    sessions.forEach(function(x){
+        if(x.role === "admin" && x.adminId === id) {
+            x.status = st; x.active = (st === "active"); x.approved = (st === "active");
+            changed = true;
+        }
+    });
+    if(changed) writeSessions(sessions);
+}
+function approveEachLogin() { return localStorage.getItem(LS_APPROVE_EACH) === "1"; }
+function setApproveEachLogin(on) { localStorage.setItem(LS_APPROVE_EACH, on ? "1" : "0"); }
+function saveAdminAccountUpdate(acc) {
+    const list = readAdminAccounts();
+    const i = list.findIndex(function(a){ return a.id === acc.id; });
+    if(i >= 0) list[i] = acc; else list.push(acc);
+    writeAdminAccounts(list);
+}
+/* ===== HEAD ADMIN OTP-ish APPROVAL CHANNEL =====
+   Mobile par Head Admin aur Admin alag-alag device hote hain,
+   is liye approval ek "flag" se pass hoti hai jo dono tabs padhte hain. */
+const LS_HEAD_APPROVE = "elite_head_approve_flag";
+
+function setHeadApproveSignal(accId, name) {
+    localStorage.setItem(LS_HEAD_APPROVE, JSON.stringify({ id: accId, name: name, at: new Date().toISOString() }));
+}
+function clearHeadApproveSignal() { localStorage.removeItem(LS_HEAD_APPROVE); }
+function readHeadApproveSignal() {
+    try { const o = JSON.parse(localStorage.getItem(LS_HEAD_APPROVE) || "null"); return (o && o.id) ? o : null; }
+    catch(e) { return null; }
+}
+/* waiting screen se Head Admin khud approve kare */
+function headApproveFromWaiting() {
+    const pw = String(document.getElementById("headApprovePw").value || "").trim();
+    const msg = document.getElementById("headApproveMsg");
+    if(!pw) { msg.innerText = "Pehle Head Admin password likhein."; return; }
+    if(pw.toLowerCase() !== HEAD_ADMIN_PASSWORD.toLowerCase()) { msg.innerText = "❌ Ghalat Head Admin password."; return; }
+    msg.innerText = "";
+    const acc = currentAdminAccount ? findAdminAccount(currentAdminAccount.id) : null;
+    if(acc) {
+        acc.status = "active";
+        saveAdminAccountUpdate(acc);
+        setAccountStatus(acc.id, "active");
+        currentAdminAccount = acc;
+    }
+    setHeadApproveSignal(acc ? acc.id : null, acc ? acc.name : (loginName || "Admin"));
+    const st = document.getElementById("approvalStatus");
+    if(st) st.innerHTML = "✅ Approve ho gaya! System khul raha hai...";
+    enterApp("admin", acc ? acc.name : (loginName || "Admin"));
+}
+/* waiting screen par rehte hue: agar Head Admin ne (kisi bhi tab se) approve kiya to khud khul jao */
+function startHeadApproveWatch() {
+    if(role !== null) return;
+    clearInterval(window.__headWatch);
+    window.__headWatch = setInterval(function(){
+        const sig = readHeadApproveSignal();
+        if(!sig) return;
+        const myId = currentAdminAccount ? currentAdminAccount.id : null;
+        if(myId && sig.id && sig.id !== myId) return;   // dusre admin ka signal, mera nahi
+        const acc = myId ? findAdminAccount(myId) : null;
+        if(acc && acc.status === "active") {
+            clearInterval(window.__headWatch);
+            currentAdminAccount = acc;
+            clearHeadApproveSignal();
+            enterApp("admin", acc.name);
+        }
+    }, 1500);
+}
+function stopHeadApproveWatch() { clearInterval(window.__headWatch); window.__headWatch = null; }
+
+function pendingAdminCount() {
+    return readAdminAccounts().filter(function(a){ return a.status === "pending"; }).length;
+}
+
+const clean = t => String(t).replace(/[<>&"'`]/g, "").trim();
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+/* ================= DEVICE / SESSION MANAGEMENT ================= */
+function generateDeviceId() {
+    return 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+}
+function getDeviceInfo() {
+    return {
+        deviceId: localStorage.getItem('elite_device_id') || generateDeviceId(),
+        userAgent: navigator.userAgent.substring(0, 80),
+        platform: navigator.platform || 'Unknown',
+        screenSize: window.screen.width + 'x' + window.screen.height,
+        lastActive: new Date().toISOString()
+    };
+}
+/* Har login par ek session record banata hai (naam ke saath) */
+function saveSession(roleType) {
+    const info = getDeviceInfo();
+    deviceId = info.deviceId;
+    if(!localStorage.getItem('elite_device_id')) localStorage.setItem('elite_device_id', info.deviceId);
+    let sessions = readSessions();
+    const idx = sessions.findIndex(function(s){ return s.deviceId === info.deviceId; });
+    const prev = idx >= 0 ? sessions[idx] : null;
+    let status, adminId = null, accName = null;
+    if(roleType === "head") status = "active";
+    else if(roleType === "viewer") status = (prev && statusOf(prev) === "deactive") ? "deactive" : "active";
+    else {
+        const acc = currentAdminAccount;
+        adminId = acc ? acc.id : (prev ? prev.adminId : null);
+        accName = acc ? acc.name : (loginName || (prev && prev.name) || "Admin");
+        status = acc ? acc.status : "pending";   // SOURCE OF TRUTH = Admin account, device nahi
+    }
+    const data = {
+        deviceId: info.deviceId, role: roleType,
+        adminId: adminId,
+        name: accName || loginName || (roleType === "head" ? "Head Admin" : roleType === "viewer" ? "Viewer" : "Admin"),
+        userAgent: info.userAgent, platform: info.platform,
+        screenSize: info.screenSize, lastActive: info.lastActive,
+        loginTime: (prev && prev.loginTime) || new Date().toISOString(),
+        status: status,
+        active: status === "active",
+        approved: status === "active",
+        online: true
+    };
+    if(roleType === "admin") data.approvedOnce = !approveEachLogin();   // "har login approval" OFF ho to ek dafa approve kaafi
+    if(idx >= 0) sessions[idx] = data; else sessions.push(data);
+    writeSessions(sessions);
+}
+function loadSession() {
+    const id = localStorage.getItem('elite_device_id');
+    if(!id) return null;
+    const session = findSession(id);
+    if(!session) return null;
+    if(statusOf(session) !== "active") return null;
+    return session;
+}
+function deactivateSession(id) { setStatus(id, "deactive"); }
+function activateSession(id) { setStatus(id, "active"); }
+function getAllSessions() { return readSessions(); }
+function deleteSession(id) {
+    writeSessions(readSessions().filter(function(s){ return s.deviceId !== id; }));
+}
+function markSessionOffline(id) {
+    let sessions = readSessions();
+    const idx = sessions.findIndex(function(s){ return s.deviceId === id; });
+    if(idx >= 0) { sessions[idx].online = false; sessions[idx].lastActive = new Date().toISOString(); writeSessions(sessions); }
+}
+function touchMySession() {
+    if(!deviceId) return;
+    let sessions = readSessions();
+    const idx = sessions.findIndex(function(s){ return s.deviceId === deviceId; });
+    if(idx >= 0) { sessions[idx].lastActive = new Date().toISOString(); sessions[idx].online = true; writeSessions(sessions); }
+}
+
+/* ================= LOGIN FUNCTIONS ================= */
+function showApproval(kind, accId, name) {
+    pendingKind = kind || "admin";
+    const headBox = document.getElementById("headApproveBox");
+    const stEl = document.getElementById("approvalStatus");
+    if(pendingKind === "admin") {
+        document.getElementById("approvalName").innerText = name || loginName || "Admin";
+        document.getElementById("approvalText").innerHTML = "<strong>" + esc(name || loginName || "Admin") + "</strong>, aap ka login request Head Admin ko bhej diya gaya hai.<br>Head Admin approve karega to aap ka system khud khul jayega.";
+        if(stEl) stEl.innerHTML = "⏳ Head Admin ki approval pending";
+        if(headBox) headBox.style.display = "block";
+        const inp = document.getElementById("headApprovePw"); if(inp) inp.value = "";
+        const hm = document.getElementById("headApproveMsg"); if(hm) hm.innerText = "";
+        startHeadApproveWatch();
+    } else {
+        document.getElementById("approvalName").innerText = "Viewer";
+        document.getElementById("approvalText").innerHTML = "Ye device Head Admin ne <strong>Deactivate</strong> kar diya hai.<br>Head Admin jab dobara <strong>Activate</strong> karega, tab hi ye system khulega.";
+        if(stEl) stEl.innerHTML = "🚫 Device deactivated";
+        if(headBox) headBox.style.display = "none";
+        stopHeadApproveWatch();
+    }
+    document.getElementById("approvalDevice").innerText = deviceId || "-";
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("approvalOverlay").classList.add("show");
+    watchApproval();
+}
+function cancelApproval() {
+    stopWatching();
+    stopHeadApproveWatch();
+    if(deviceId) {
+        const cur = findSession(deviceId);
+        if(cur && cur.role !== "head") markSessionOffline(deviceId);
+    }
+    currentAdminAccount = null;
+    role = null; loginName = null; isApproved = false;
+    localStorage.removeItem('elite_role');
+    localStorage.removeItem('elite_admin_id');
+    document.getElementById("approvalOverlay").classList.remove("show");
+    document.getElementById("loginOverlay").style.display = "flex";
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginError").style.display = "none";
+}
+
+function enterApp(roleType, name) {
+    role = roleType; loginName = name; isApproved = true;
+    stopHeadApproveWatch();
+    clearHeadApproveSignal();
+    const hp = document.getElementById("headApprovePw"); if(hp) hp.value = "";
+    if(deviceId) localStorage.setItem('elite_device_id', deviceId);
+    localStorage.setItem('elite_role', roleType);
+    if(name) localStorage.setItem('elite_name', name);
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("approvalOverlay").classList.remove("show");
+    document.body.classList.remove("viewer", "admin-mode");
+    const badge = document.getElementById("roleBadge");
+    if(roleType === "head") {
+        badge.innerText = "🔴 Head Admin";
+        badge.className = "role-badge badge-head";
+        document.getElementById("readonlyBanner").classList.remove("show");
+    } else if(roleType === "admin") {
+        badge.innerText = "🔐 Admin" + (name ? ": " + name : "");
+        badge.className = "role-badge badge-admin";
+        document.body.classList.add("admin-mode");
+        document.getElementById("readonlyBanner").classList.remove("show");
+    } else {
+        badge.innerText = "👁 Viewer";
+        badge.className = "role-badge badge-viewer";
+        document.body.classList.add("viewer");
+        document.getElementById("readonlyBanner").classList.add("show");
+    }
+    updateDashboard(); renderStudents();
+    if(roleType === "head") renderDevicePanel();
+    startHeartbeat();
+}
+/* Enter key: pehle Head Admin, phir Admin check hoga */
+async function loginEnter() {
+    const pw = document.getElementById("loginPassword").value.trim();
+    if(await tryHeadAdmin(pw)) { await loginHead(); return; }
+    if(await tryAdmin(pw) || findAdminAccountByName(clean(document.getElementById("loginName").value))) { await loginAdmin(); return; }
+    document.getElementById("loginError").innerText = "Incorrect password! Try again.";
+    document.getElementById("loginError").style.display = "block";
+    document.getElementById("loginPassword").value = "";
+}
+
+async function loginHead() {
+    const input = document.getElementById("loginPassword").value.trim();
+    if(await tryHeadAdmin(input)) {
+        loginName = "Head Admin";
+        currentAdminAccount = null;
+        saveSession("head");
+        localStorage.removeItem('elite_admin_id');
+        localStorage.setItem('elite_role', 'head');
+        enterApp("head", loginName);
+    } else {
+        document.getElementById("loginError").innerText = "Incorrect Head Admin password!";
+        document.getElementById("loginError").style.display = "block";
+        document.getElementById("loginPassword").value = "";
+    }
+}
+async function loginAdmin() {
+    const pw = document.getElementById("loginPassword").value.trim();
+    const name = clean(document.getElementById("loginName").value);
+    if(!name) {
+        document.getElementById("loginError").innerText = "Pehle apna naam likhein (Admin Name).";
+        document.getElementById("loginError").style.display = "block";
+        return;
+    }
+    let acc = findAdminAccountByName(name);
+    if(!acc) {
+        // Naya admin: account banta hai, status "pending" -> Head Admin ki approval zaroori
+        acc = {
+            id: nextAdminAccId(), name: name, password: pw,
+            status: "pending", created: new Date().toISOString()
+        };
+        const list = readAdminAccounts(); list.push(acc); writeAdminAccounts(list);
+    } else if(acc.password !== pw && pw !== ADMIN_PASSWORD) {
+        document.getElementById("loginError").innerText = "Incorrect Admin password!";
+        document.getElementById("loginError").style.display = "block";
+        document.getElementById("loginPassword").value = "";
+        return;
+    }
+    currentAdminAccount = acc;
+    loginName = acc.name;
+    const needsRequest = (acc.status !== "active") || approveEachLogin();
+    saveSession("admin");
+    localStorage.setItem('elite_role', 'admin');
+    localStorage.setItem('elite_admin_id', acc.id);
+    if(acc.status === "deactive") {
+        document.getElementById("loginError").innerText = "Aap ka Admin access deactive hai. Head Admin se rabta karein.";
+        document.getElementById("loginError").style.display = "block";
+        return;
+    }
+    if(needsRequest) {
+        if(acc.status !== "active") { acc.status = "pending"; acc.requestedAt = new Date().toISOString(); saveAdminAccountUpdate(acc); }
+        showApproval("admin", acc.id, acc.name);
+    } else {
+        enterApp("admin", acc.name);
+    }
+}
+function loginViewer() {
+    loginName = "Viewer";
+    saveSession("viewer");
+    localStorage.setItem('elite_role', 'viewer');
+    localStorage.removeItem('elite_admin_id');
+    const s = findSession(deviceId);
+    if(s && statusOf(s) === "deactive") { showApproval("viewer", null, "Viewer"); return; }
+    enterApp("viewer", "Viewer");
+}
+function logout() {
+    stopWatching();
+    if(deviceId && role !== "head") markSessionOffline(deviceId);
+    role = null; loginName = null; isApproved = false;
+    currentAdminAccount = null;
+    localStorage.removeItem('elite_role');
+    localStorage.removeItem('elite_admin_id');
+    document.getElementById("loginOverlay").style.display = "flex";
+    document.getElementById("approvalOverlay").classList.remove("show");
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginName").value = "";
+    document.getElementById("loginError").style.display = "none";
+    document.body.classList.remove("viewer", "admin-mode");
+    document.getElementById("readonlyBanner").classList.remove("show");
+}
+function checkAdmin() {
+    if(role !== "admin" && role !== "head") {
+        showMsg("Access Denied! Sirf Admin ya Head Admin changes kar sakta hai.");
+        return false;
+    }
+    return true;
+}
+function checkHead() {
+    if(role !== "head") {
+        showMsg("Access Denied! Sirf Head Admin devices control kar sakta hai.");
+        return false;
+    }
+    return true;
+}
+
+/* ================= AUTO LOGIN ================= */
+function autoLogin() {
+    const savedRole = localStorage.getItem('elite_role');
+    const savedName = localStorage.getItem('elite_name') || "";
+    const id = localStorage.getItem('elite_device_id');
+    if(!savedRole || !id) return false;
+    deviceId = id;
+    const sess = findSession(id);
+    if(!sess) return false;
+    if(savedRole === 'head') { loginName = "Head Admin"; currentAdminAccount = null; enterApp("head", loginName); return true; }
+    if(savedRole === 'admin') {
+        const acc = findAdminAccount(localStorage.getItem('elite_admin_id'));
+        if(!acc) return false;
+        currentAdminAccount = acc;
+        loginName = acc.name || savedName || "Admin";
+        if(acc.status === "active" && !approveEachLogin()) { enterApp("admin", loginName); return true; }
+        showApproval("admin", acc.id, loginName);
+        return true;
+    }
+    if(savedRole === 'viewer') {
+        currentAdminAccount = null;
+        if(statusOf(sess) === "deactive") { loginName = "Viewer"; showApproval("viewer", null, "Viewer"); return true; }
+        loginName = "Viewer"; enterApp("viewer", "Viewer"); return true;
+    }
+    return false;
+}
+
+/* ================= SESSION WATCHER ================= */
+function stopWatching() {
+    if(sessionMonitor) { clearInterval(sessionMonitor); sessionMonitor = null; }
+    if(heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+}
+function watchApproval() {
+    stopWatching();
+    sessionMonitor = setInterval(function(){
+        if(pendingKind === "admin") {
+            const acc = currentAdminAccount ? findAdminAccount(currentAdminAccount.id) : null;
+            if(acc && acc.status === "active") {
+                stopWatching();
+                currentAdminAccount = acc;
+                loginName = acc.name;
+                localStorage.setItem('elite_name', acc.name);
+                enterApp("admin", acc.name);
+            }
+            return;
+        }
+        const s = findSession(deviceId);
+        if(s && statusOf(s) === "active") {
+            stopWatching();
+            enterApp("viewer", "Viewer");
+        }
+    }, 2000);
+}
+function startHeartbeat() {
+    stopWatching();
+    heartbeatTimer = setInterval(function(){ touchMySession(); }, 8000);
+    if(role === 'head') return;
+    sessionMonitor = setInterval(function(){
+        let stillOk = false;
+        if(role === 'admin') {
+            const acc = currentAdminAccount ? findAdminAccount(currentAdminAccount.id) : null;
+            stillOk = !!(acc && acc.status === "active");
+            if(acc) currentAdminAccount = acc;
+        } else {
+            const s = findSession(deviceId);
+            stillOk = !!(s && statusOf(s) === "active");
+        }
+        if(!stillOk) {
+            const wasAdmin = (role === 'admin');
+            const who = loginName || "Admin";
+            const acc = currentAdminAccount;
+            stopWatching();
+            role = null; isApproved = false;
+            localStorage.removeItem('elite_role');
+            if(wasAdmin && acc) {
+                currentAdminAccount = acc;
+                showApproval("admin", acc.id, who);
+            } else {
+                currentAdminAccount = null;
+                showApproval("viewer", null, "Viewer");
+            }
+        }
+    }, 3000);
+}
+/* ================= DATA ================= */
+function makePayments(defaultPaid) {
+    let p = {}; MONTHS.forEach(function(m){ p[m] = defaultPaid; }); return p;
+}
+function getDefaultStudents() {
+    return [
+        { id:"ST-001", name:"Ali Khan", cls:"DAE CIT", phone:"03001234567", active:true, fee:8000,
+          payments: makePayments(false),
+          testResults: [
+              {id:1, month:"January", subject:"Mathematics", totalMarks:100, obtainedMarks:85},
+              {id:2, month:"January", subject:"Physics", totalMarks:100, obtainedMarks:72},
+              {id:3, month:"February", subject:"Mathematics", totalMarks:100, obtainedMarks:90},
+              {id:4, month:"February", subject:"Programming", totalMarks:100, obtainedMarks:88}
+          ]},
+        { id:"ST-002", name:"Ahmed Raza", cls:"DAE IT", phone:"03111234567", active:true, fee:8000,
+          payments: makePayments(false),
+          testResults: [
+              {id:5, month:"January", subject:"Mathematics", totalMarks:100, obtainedMarks:65},
+              {id:6, month:"January", subject:"Programming", totalMarks:100, obtainedMarks:78},
+              {id:7, month:"February", subject:"Mathematics", totalMarks:100, obtainedMarks:70}
+          ]},
+        { id:"ST-003", name:"Usman Ali", cls:"DAE Electrical", phone:"03221234567", active:false, fee:8000,
+          payments: makePayments(false),
+          testResults: [
+              {id:8, month:"January", subject:"Electronics", totalMarks:100, obtainedMarks:55},
+              {id:9, month:"January", subject:"Physics", totalMarks:100, obtainedMarks:45}
+          ]}
+    ];
+}
+
+let students = [];
+let nextTestId = 10;
+let attendance = {};
+
+function loadData() {
+    let saved = localStorage.getItem("collegeStudents_v5");
+    if(saved) {
+        try { let d = JSON.parse(saved); students = d.students || getDefaultStudents(); nextTestId = d.nextTestId || 10; attendance = d.attendance || {}; }
+        catch(e) { students = getDefaultStudents(); nextTestId = 10; }
+    } else { students = getDefaultStudents(); nextTestId = 10; }
+    students.forEach(function(s) {
+        if(!s.payments || typeof s.payments !== "object") s.payments = makePayments(false);
+        MONTHS.forEach(function(m){ if(typeof s.payments[m] !== "boolean") s.payments[m] = false; });
+        if(s.hasOwnProperty("paid")) delete s.paid;
+        if(!s.testResults || !Array.isArray(s.testResults)) s.testResults = [];
+    });
+}
+loadData();
+
+function saveData() {
+    if(currentRole !== "admin" && currentRole !== "head") return;
+    localStorage.setItem("collegeStudents_v5", JSON.stringify({ students: students, nextTestId: nextTestId, attendance: attendance }));
+}
+function getMonthFee(student, month) {
+    if(!student.payments) student.payments = makePayments(false);
+    return student.payments[month] === true;
+}
+function setMonthFee(student, month, status) {
+    if(!student.payments) student.payments = makePayments(false);
+    student.payments[month] = (status === true);
+}
+function countPaidMonths(student) {
+    if(!student.payments) return 0;
+    let c = 0; MONTHS.forEach(function(m){ if(student.payments[m] === true) c++; }); return c;
+}
+function countPendingMonths(student) { return 12 - countPaidMonths(student); }
+
+/* ================= GRADE ================= */
+function calculatePercentage(obtained, total) {
+    if(!total || total <= 0) return 0;
+    return Math.round((obtained / total) * 100);
+}
+function calculateGrade(pct) {
+    if(pct >= 80) return 'A'; if(pct >= 70) return 'B'; if(pct >= 60) return 'C'; if(pct >= 50) return 'D'; return 'F';
+}
+function getGradeClass(g) { return 'grade-' + g.toLowerCase(); }
+function getStudentAvgPercentage(s) {
+    if(!s.testResults || s.testResults.length === 0) return 0;
+    let t = 0; s.testResults.forEach(function(tr){ t += calculatePercentage(tr.obtainedMarks, tr.totalMarks); });
+    return Math.round(t / s.testResults.length);
+}
+
+/* ================= NAVIGATION ================= */
+function openPage(page, btn) {
+    document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+    document.getElementById(page).classList.add("active");
+    document.querySelectorAll(".menu button").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    const titles = { dashboard:"College Dashboard", students:"Student Management", attendance:"Attendance Management",
+        fees:"Monthly Fees", tests:"Test Reports", monthlyReport:"Monthly Report", devicePanel:"Active Devices" };
+    document.getElementById("pageTitle").innerText = titles[page] || "";
+    if(page === "students") renderStudents();
+    if(page === "attendance") renderAttendance();
+    if(page === "fees") renderFees();
+    if(page === "tests") { populateTestFilters(); renderTests(); }
+    if(page === "monthlyReport") generateReport();
+    if(page === "devicePanel") renderDevicePanel();
+}
+
+/* ================= DASHBOARD ================= */
+function updateDashboard() {
+    let total = students.length, active = 0, deactive = 0;
+    students.forEach(function(s){ if(s.active) active++; else deactive++; });
+    let cm = MONTHS[new Date().getMonth()], fees = 0;
+    students.forEach(function(s){ if(s.active && getMonthFee(s, cm)) fees += s.fee; });
+    document.getElementById("totalStudents").innerText = total;
+    document.getElementById("activeStudents").innerText = active;
+    document.getElementById("deactiveStudents").innerText = deactive;
+    document.getElementById("dashboardFees").innerText = "Rs. " + fees.toLocaleString();
+    let allP = [], topName = "-", topAvg = -1, mTests = 0;
+    students.forEach(function(s){
+        if(s.testResults) {
+            s.testResults.forEach(function(t){
+                let p = calculatePercentage(t.obtainedMarks, t.totalMarks);
+                allP.push(p); if(t.month === cm) mTests++;
+            });
+        }
+        let a = getStudentAvgPercentage(s);
+        if(s.active && a > topAvg) { topAvg = a; topName = s.name + " (" + a + "%)"; }
+    });
+    let avgP = allP.length > 0 ? Math.round(allP.reduce(function(a,b){return a+b;},0) / allP.length) : 0;
+    document.getElementById("avgTestPercent").innerText = avgP + "%";
+    document.getElementById("totalTests").innerText = allP.length;
+    document.getElementById("topStudent").innerText = topName;
+    document.getElementById("monthTests").innerText = mTests;
+}
+
+/* ================= STUDENTS ================= */
+function renderStudents() {
+    let table = document.getElementById("studentTable");
+    let search = document.getElementById("studentSearch").value.toLowerCase();
+    let filter = document.getElementById("statusFilter").value;
+    table.innerHTML = "";
+    let has = false;
+    students.forEach(function(s, i){
+        if(!s.name.toLowerCase().includes(search) && !s.cls.toLowerCase().includes(search) && !s.id.toLowerCase().includes(search)) return;
+        if(filter === "active" && !s.active) return;
+        if(filter === "deactive" && s.active) return;
+        has = true;
+        let row = document.createElement("tr");
+        let action = "";
+        if(currentRole === "head" || currentRole === "admin") {
+            action = `<button class="primary" onclick="openStudentDetail(${i})" style="margin-right:3px;padding:7px 10px;font-size:12px;">📋</button>`;
+            if(currentRole === "head" || currentRole === "admin") {
+                action += `<button class="edit-btn" onclick="openEditStudent(${i})" style="margin-right:3px;">✏️</button>`;
+                action += s.active
+                    ? `<button class="danger" onclick="changeStatus(${i},false)" style="margin-right:3px;">Deactive</button>`
+                    : `<button class="success" onclick="changeStatus(${i},true)" style="margin-right:3px;">Activate</button>`;
+                action += `<button class="warning" onclick="deleteStudent(${i})">Delete</button>`;
+            }
+        } else {
+            action = `<button class="primary" onclick="openStudentDetail(${i})" style="margin-right:3px;">📋 Details</button><span style="color:#94a3b8;font-size:12px;">View Only</span>`;
+        }
+        row.innerHTML = `<td><strong>${s.id}</strong></td><td>${s.name}</td><td>${s.cls}</td><td>${s.phone}</td><td>Rs. ${s.fee.toLocaleString()}</td><td>${s.active ? '<span class="badge active-badge">Active</span>' : '<span class="badge deactive-badge">Deactive</span>'}</td><td class="admin-only">${action}</td>`;
+        table.appendChild(row);
+    });
+    if(!has) table.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:30px;">No students found.</td></tr>';
+}
+
+function openEditStudent(index) {
+    if(!checkAdmin()) return;
+    let s = students[index]; if(!s) return;
+    document.getElementById("editStudentIndex").value = index;
+    document.getElementById("editStudentName").value = s.name;
+    document.getElementById("editStudentClass").value = s.cls;
+    document.getElementById("editStudentPhone").value = s.phone;
+    document.getElementById("editStudentFee").value = s.fee;
+    document.getElementById("editStudentModal").classList.add("show");
+}
+function closeEditStudentModal() { document.getElementById("editStudentModal").classList.remove("show"); }
+function saveEditedStudent() {
+    if(!checkAdmin()) return;
+    let i = parseInt(document.getElementById("editStudentIndex").value);
+    let n = clean(document.getElementById("editStudentName").value);
+    let c = clean(document.getElementById("editStudentClass").value);
+    let p = clean(document.getElementById("editStudentPhone").value);
+    let f = parseFloat(document.getElementById("editStudentFee").value);
+    if(!n || !c || !p || isNaN(f) || f <= 0) { showMsg("Please fill all fields correctly."); return; }
+    students[i].name = n; students[i].cls = c; students[i].phone = p; students[i].fee = f;
+    saveData(); renderStudents(); updateDashboard(); closeEditStudentModal(); showMsg("Student updated successfully.");
+}
+function addStudent() {
+    if(!checkAdmin()) return;
+    let n = clean(document.getElementById("studentName").value);
+    let c = clean(document.getElementById("studentClass").value);
+    let p = clean(document.getElementById("studentPhone").value);
+    if(!n || !c || !p) { showMsg("Please fill all fields."); return; }
+    let id = "ST-" + String(students.reduce(function(m,x){return Math.max(m,parseInt(x.id.slice(3))||0);},0) + 1).padStart(3, "0");
+    students.push({ id:id, name:n, cls:c, phone:p, active:true, fee:8000, payments:makePayments(false), testResults:[] });
+    saveData(); renderStudents(); updateDashboard();
+    document.getElementById("studentName").value = ""; document.getElementById("studentClass").value = ""; document.getElementById("studentPhone").value = "";
+    showMsg("Student added successfully.");
+}
+function changeStatus(index, status) {
+    if(!checkAdmin()) return;
+    students[index].active = status; saveData(); renderStudents(); updateDashboard(); generateReport();
+}
+function deleteStudent(index) {
+    if(!checkAdmin()) return;
+    askConfirm("Kya aap ye student delete karna chahte hain?", function(){
+        students.splice(index, 1); saveData(); renderStudents(); updateDashboard(); generateReport();
+        showMsg("🗑 Student delete ho gaya.", "ok");
+    }, "Student Delete");
+}
+
+function openStudentDetail(index) {
+    currentDetailIndex = index; let s = students[index]; if(!s) return;
+    document.getElementById("modalStudentName").innerText = s.name + " (" + s.id + ")";
+    document.getElementById("modalStudentInfo").innerText = "Class: " + s.cls + " | Phone: " + s.phone + " | Fee: Rs. " + s.fee.toLocaleString();
+    let grid = document.getElementById("modalMonthFees"); grid.innerHTML = "";
+    MONTHS.forEach(function(m){
+        let isPaid = getMonthFee(s, m);
+        let div = document.createElement("div");
+        div.className = "month-fee-item " + (isPaid ? "paid" : "pending");
+        div.innerHTML = "<strong>" + m.substring(0,3) + "</strong><br>" + (isPaid ? "✅ Paid" : "❌ Pending");
+        if(currentRole === "head" || currentRole === "admin") { div.title = "Click to toggle"; div.onclick = function(){ toggleMonthFee(index, m); }; }
+        grid.appendChild(div);
+    });
+    let testDiv = document.getElementById("modalTestResults"); testDiv.innerHTML = "";
+    if(s.testResults && s.testResults.length > 0) {
+        let byMonth = {};
+        s.testResults.forEach(function(t){ if(!byMonth[t.month]) byMonth[t.month] = []; byMonth[t.month].push(t); });
+        Object.keys(byMonth).forEach(function(m){
+            let md = document.createElement("div"); md.style.marginBottom = "16px";
+            let mh = `<h4 style="color:#2563eb;margin-bottom:10px;font-size:15px;">${m}</h4>`;
+            byMonth[m].forEach(function(t){
+                let pct = calculatePercentage(t.obtainedMarks, t.totalMarks);
+                let grade = calculateGrade(pct);
+                let color = pct >= 60 ? '#16a34a' : (pct >= 50 ? '#f59e0b' : '#dc2626');
+                let editBtn = (currentRole === "head" || currentRole === "admin") ? `<button class="edit-btn" onclick="openEditTest('${s.id}',${t.id})" style="float:right;font-size:12px;padding:5px 10px;">✏️ Edit</button>` : '';
+                mh += `<div class="test-result-card"><div class="test-header"><span class="test-subject">${t.subject}</span><span><span class="test-grade ${getGradeClass(grade)}">Grade ${grade}</span>${editBtn}</span></div><div class="test-marks">Marks: <span class="test-percent">${t.obtainedMarks} / ${t.totalMarks}</span> &nbsp;|&nbsp; Percentage: <span class="test-percent" style="color:${color}">${pct}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${color};"></div></div></div>`;
+            });
+            md.innerHTML = mh; testDiv.appendChild(md);
+        });
+    } else { testDiv.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">No test results available.</p>'; }
+    let pc = countPaidMonths(s), penc = countPendingMonths(s);
+    let tc = pc * s.fee, td = penc * s.fee, avg = getStudentAvgPercentage(s), tcount = s.testResults ? s.testResults.length : 0;
+    document.getElementById("modalSummary").innerHTML = `<strong>Paid Months:</strong> ${pc} &nbsp;|&nbsp; <strong>Pending Months:</strong> ${penc} &nbsp;|&nbsp; <strong>Total Collected:</strong> Rs. ${tc.toLocaleString()} &nbsp;|&nbsp; <strong>Total Due:</strong> Rs. ${td.toLocaleString()}<br><br><strong>Tests Taken:</strong> ${tcount} &nbsp;|&nbsp; <strong>Average %:</strong> ${avg}% &nbsp;|&nbsp; <strong>Overall Grade:</strong> <span class="badge ${getGradeClass(calculateGrade(avg))}">${calculateGrade(avg)}</span>`;
+    document.getElementById("studentModal").classList.add("show");
+}
+function toggleMonthFee(index, month) {
+    if(!checkAdmin()) return;
+    setMonthFee(students[index], month, !getMonthFee(students[index], month));
+    saveData(); openStudentDetail(index); updateDashboard(); generateReport();
+}
+function closeModal() { document.getElementById("studentModal").classList.remove("show"); }
+function openAllMonthsModal() {
+    let html = `<h2 style="font-size:18px;margin-bottom:4px;">All Students - All Months Fee Status</h2><div class="table-wrap"><table style="margin-top:14px;font-size:13px;"><thead><tr><th>Student</th><th>Class</th>`;
+    MONTHS.forEach(function(m){ html += `<th>${m.substring(0,3)}</th>`; });
+    html += `<th>Paid</th><th>Pending</th></tr></thead><tbody>`;
+    students.filter(function(s){ return s.active; }).forEach(function(s){
+        html += `<tr><td><strong>${s.name}</strong></td><td>${s.cls}</td>`;
+        MONTHS.forEach(function(m){ let isPaid = getMonthFee(s, m); html += `<td style="text-align:center;">${isPaid ? '<span style="color:#16a34a;font-weight:bold;">P</span>' : '<span style="color:#dc2626;font-weight:bold;">X</span>'}</td>`; });
+        html += `<td style="color:#16a34a;font-weight:bold;">${countPaidMonths(s)}</td><td style="color:#dc2626;font-weight:bold;">${countPendingMonths(s)}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    let mb = document.querySelector("#studentModal .modal-box");
+    mb.innerHTML = `<button class="modal-close" onclick="restoreModal();closeModal();">×</button>${html}`;
+    document.getElementById("studentModal").classList.add("show");
+}
+function restoreModal() {
+    let mb = document.querySelector("#studentModal .modal-box");
+    mb.innerHTML = `<button class="modal-close" onclick="closeModal()">×</button><h2 id="modalStudentName">Student Details</h2><p id="modalStudentInfo" style="color:#64748b;margin-top:4px;font-size:14px;"></p><hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;"><h3 style="font-size:15px;">Monthly Fee Status (Admin: Click to toggle)</h3><div id="modalMonthFees" class="month-fee-grid"></div><hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;"><h3 style="font-size:15px;">Test / Exam Results</h3><div id="modalTestResults"></div><hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;"><h3 style="font-size:15px;">Summary</h3><p id="modalSummary" style="margin-top:10px;color:#334155;font-size:14px;line-height:1.6;"></p>`;
+}
+
+/* ================= EDIT TEST ================= */
+function openEditTest(studentId, testId) {
+    if(!checkAdmin()) return;
+    let student = students.find(function(s){ return s.id === studentId; });
+    if(!student || !student.testResults) return;
+    let test = student.testResults.find(function(t){ return t.id === testId; });
+    if(!test) return;
+    document.getElementById("editTestStudentId").value = studentId;
+    document.getElementById("editTestId").value = testId;
+    document.getElementById("editTestSubject").value = test.subject;
+    document.getElementById("editTestMonth").value = test.month;
+    document.getElementById("editTestTotalMarks").value = test.totalMarks;
+    document.getElementById("editTestObtainedMarks").value = test.obtainedMarks;
+    document.getElementById("editTestModal").classList.add("show");
+}
+function closeEditTestModal() { document.getElementById("editTestModal").classList.remove("show"); }
+function saveEditedTest() {
+    if(!checkAdmin()) return;
+    let sid = document.getElementById("editTestStudentId").value;
+    let tid = parseInt(document.getElementById("editTestId").value);
+    let tm = parseFloat(document.getElementById("editTestTotalMarks").value);
+    let om = parseFloat(document.getElementById("editTestObtainedMarks").value);
+    if(isNaN(tm) || isNaN(om) || om > tm || tm <= 0) { showMsg("Invalid marks!"); return; }
+    let student = students.find(function(s){ return s.id === sid; });
+    if(!student || !student.testResults) { showMsg("Not found."); return; }
+    let test = student.testResults.find(function(t){ return t.id === tid; });
+    if(!test) { showMsg("Test not found."); return; }
+    test.totalMarks = tm; test.obtainedMarks = om;
+    saveData(); renderTests(); updateDashboard();
+    if(currentDetailIndex >= 0) openStudentDetail(currentDetailIndex);
+    closeEditTestModal(); showMsg("Test updated successfully.");
+}
+
+/* ================= ATTENDANCE ================= */
+function renderAttendance() {
+    const date = document.getElementById("attendanceDate").value;
+    const rec = attendance[date] || {};
+    const table = document.getElementById("attendanceTable");
+    const ro = (currentRole !== "head" && currentRole !== "admin") ? "disabled" : "";
+    table.innerHTML = "";
+    let has = false;
+    students.filter(function(s){ return s.active; }).forEach(function(s){
+        has = true; const v = rec[s.id] || "";
+        const row = document.createElement("tr");
+        row.innerHTML = `<td><strong>${s.id}</strong></td><td>${s.name}</td><td>${s.cls}</td><td><select ${ro} onchange="markAtt('${s.id}',this.value)" style="min-width:120px;"><option value="">Not marked</option><option value="P"${v==="P"?" selected":""}>Present</option><option value="A"${v==="A"?" selected":""}>Absent</option><option value="L"${v==="L"?" selected":""}>Leave</option></select></td>`;
+        table.appendChild(row);
+    });
+    if(!has) table.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:30px;">No active students found.</td></tr>';
+}
+function markAtt(id, v) {
+    if(!checkAdmin()) { renderAttendance(); return; }
+    const d = document.getElementById("attendanceDate").value;
+    (attendance[d] = attendance[d] || {})[id] = v; saveData();
+}
+
+/* ================= FEES ================= */
+function renderFees() {
+    let table = document.getElementById("feesTable");
+    let month = document.getElementById("feeMonth").value;
+    table.innerHTML = "";
+    let has = false;
+    for(let i = 0; i < students.length; i++) {
+        let s = students[i]; if(!s.active) continue; has = true;
+        let isPaid = getMonthFee(s, month);
+        let row = document.createElement("tr");
+        let action = "";
+        if(currentRole === "head" || currentRole === "admin") {
+            action = isPaid ? `<button class="warning" onclick="unpayFee(${i},'${month}')">Mark Pending</button>` : `<button class="success" onclick="payFee(${i},'${month}')">Mark Paid</button>`;
+        } else { action = `<span style="color:#94a3b8;font-size:12px;">View Only</span>`; }
+        row.innerHTML = `<td><strong>${s.name}</strong></td><td>${s.cls}</td><td>Rs. ${s.fee.toLocaleString()}</td><td>${isPaid ? '<span class="badge active-badge">Paid</span>' : '<span class="badge deactive-badge">Pending</span>'}</td><td class="admin-only">${action}</td>`;
+        table.appendChild(row);
+    }
+    if(!has) table.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:30px;">No active students found.</td></tr>';
+}
+function payFee(index, month) { if(!checkAdmin()) return; setMonthFee(students[index], month, true); saveData(); renderFees(); updateDashboard(); generateReport(); }
+function unpayFee(index, month) { if(!checkAdmin()) return; setMonthFee(students[index], month, false); saveData(); renderFees(); updateDashboard(); generateReport(); }
+
+/* ================= TEST REPORTS ================= */
+function populateTestFilters() {
+    let sf = document.getElementById("testStudentFilter"), cf = document.getElementById("testClassFilter"), ts = document.getElementById("testStudentSelect");
+    let cs = sf.value, cc = cf.value;
+    sf.innerHTML = '<option value="all">All Students</option>'; cf.innerHTML = '<option value="all">All Classes</option>';
+    if(ts) ts.innerHTML = '<option value="">Select Student</option>';
+    let classes = {};
+    students.forEach(function(s){
+        sf.innerHTML += `<option value="${s.id}">${s.name} (${s.id})</option>`;
+        if(ts) ts.innerHTML += `<option value="${s.id}">${s.name} (${s.id})</option>`;
+        classes[s.cls] = true;
+    });
+    Object.keys(classes).forEach(function(c){ cf.innerHTML += `<option value="${c}">${c}</option>`; });
+    sf.value = cs || "all"; cf.value = cc || "all";
+}
+function renderTests() {
+    let table = document.getElementById("testsTable");
+    let sf = document.getElementById("testStudentFilter").value;
+    let mf = document.getElementById("testMonthFilter").value;
+    let cf = document.getElementById("testClassFilter").value;
+    table.innerHTML = "";
+    let has = false;
+    students.forEach(function(s){
+        if(sf !== "all" && s.id !== sf) return;
+        if(cf !== "all" && s.cls !== cf) return;
+        if(s.testResults && s.testResults.length > 0) {
+            s.testResults.forEach(function(t){
+                if(mf !== "all" && t.month !== mf) return;
+                has = true;
+                let pct = calculatePercentage(t.obtainedMarks, t.totalMarks);
+                let grade = calculateGrade(pct);
+                let row = document.createElement("tr");
+                let action = "";
+                if(currentRole === "head" || currentRole === "admin") {
+                    action = `<button class="edit-btn" onclick="openEditTest('${s.id}',${t.id})" style="margin-right:3px;font-size:12px;padding:5px 10px;">✏️</button><button class="danger" onclick="deleteTestResult('${s.id}',${t.id})" style="font-size:12px;padding:5px 10px;">Delete</button>`;
+                } else { action = `<span style="color:#94a3b8;font-size:12px;">View Only</span>`; }
+                row.innerHTML = `<td><strong>${s.name}</strong></td><td>${s.cls}</td><td>${t.month}</td><td>${t.subject}</td><td>${t.obtainedMarks} / ${t.totalMarks}</td><td><strong>${pct}%</strong></td><td><span class="badge ${getGradeClass(grade)}">${grade}</span></td><td class="admin-only">${action}</td>`;
+                table.appendChild(row);
+            });
+        }
+    });
+    if(!has) table.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px;">No test results found.</td></tr>';
+}
+function addTestResult() {
+    if(!checkAdmin()) return;
+    let sid = document.getElementById("testStudentSelect").value;
+    let month = document.getElementById("testMonthSelect").value;
+    let subject = clean(document.getElementById("testSubject").value);
+    let tm = parseFloat(document.getElementById("testTotalMarks").value);
+    let om = parseFloat(document.getElementById("testObtainedMarks").value);
+    if(!sid || !subject || isNaN(tm) || isNaN(om)) { showMsg("Please fill all fields."); return; }
+    if(om > tm) { showMsg("Obtained marks cannot be greater than total marks."); return; }
+    let student = students.find(function(s){ return s.id === sid; });
+    if(!student) { showMsg("Student not found."); return; }
+    if(!student.testResults) student.testResults = [];
+    student.testResults.push({ id: nextTestId++, month: month, subject: subject, totalMarks: tm, obtainedMarks: om });
+    saveData(); renderTests(); updateDashboard();
+    document.getElementById("testSubject").value = ""; document.getElementById("testTotalMarks").value = ""; document.getElementById("testObtainedMarks").value = "";
+    showMsg("Test result added successfully.");
+}
+function deleteTestResult(studentId, testId) {
+    if(!checkAdmin()) return;
+    askConfirm("Kya aap ye test result delete karna chahte hain?", function(){
+        let student = students.find(function(s){ return s.id === studentId; });
+        if(student && student.testResults) {
+            student.testResults = student.testResults.filter(function(t){ return t.id !== testId; });
+            saveData(); renderTests(); updateDashboard();
+            if(currentDetailIndex >= 0) openStudentDetail(currentDetailIndex);
+            showMsg("🗑 Test result delete ho gaya.", "ok");
+        }
+    }, "Test Delete");
+}
+
+function generateReport() {
+    let month = document.getElementById("reportMonth").value;
+    let total = students.length, active = 0, deactive = 0;
+    students.forEach(function(s){ if(s.active) active++; else deactive++; });
+    let fees = 0;
+    students.forEach(function(s){ if(s.active && getMonthFee(s, month)) fees += s.fee; });
+    document.getElementById("reportTotal").innerText = total;
+    document.getElementById("reportActive").innerText = active;
+    document.getElementById("reportDeactive").innerText = deactive;
+    document.getElementById("reportFees").innerText = "Rs. " + fees.toLocaleString();
+    let testCount = 0, testTotalPct = 0, gradeA = 0, gradeF = 0;
+    students.forEach(function(s){
+        if(s.testResults) {
+            s.testResults.filter(function(t){ return t.month === month; }).forEach(function(t){
+                testCount++;
+                let pct = calculatePercentage(t.obtainedMarks, t.totalMarks);
+                testTotalPct += pct;
+                let g = calculateGrade(pct);
+                if(g === 'A') gradeA++; if(g === 'F') gradeF++;
+            });
+        }
+    });
+    let avgPct = testCount > 0 ? Math.round(testTotalPct / testCount) : 0;
+    document.getElementById("reportTests").innerText = testCount;
+    document.getElementById("reportAvgPercent").innerText = avgPct + "%";
+    document.getElementById("reportTopGrade").innerText = gradeA;
+    document.getElementById("reportFailGrade").innerText = gradeF;
+    let table = document.getElementById("reportTable"); table.innerHTML = "";
+    students.forEach(function(s){
+        let isPaid = getMonthFee(s, month);
+        let avg = getStudentAvgPercentage(s);
+        let row = document.createElement("tr");
+        row.innerHTML = `<td><strong>${s.id}</strong></td><td>${s.name}</td><td>${s.cls}</td><td>${s.active ? '<span class="badge active-badge">Active</span>' : '<span class="badge deactive-badge">Deactive</span>'}</td><td>${isPaid ? '<span class="badge active-badge">Paid</span>' : '<span class="badge deactive-badge">Pending</span>'}</td><td><strong>${avg}%</strong></td>`;
+        table.appendChild(row);
+    });
+}
+
+/* ================= DEVICE PANEL (Head Admin Only) ================= */
+function esc(t) { return String(t == null ? "" : t).replace(/[<>&"']/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function accountCard(a) {
+    const st = a.status || "pending";
+    const badge = st === "active" ? '<span class="badge active-badge">Active</span>'
+               : st === "deactive" ? '<span class="badge deactive-badge">Deactive</span>'
+               : '<span class="badge pending-badge">Pending</span>';
+    const s = readSessions().filter(function(x){ return x.role === 'admin' && x.adminId === a.id; });
+    const live = s.filter(function(x){ return x.online !== false; });
+    const devices = s.length ? s.map(function(x){ return esc(x.deviceId) + (x.online === false ? " (offline)" : ""); }).join(", ") : "Abhi koi device login nahi";
+    let buttons = '';
+    if(st === "pending") {
+        buttons = `<button class="success" onclick="approveAdmin('${esc(a.id)}')">✅ Approve</button>
+                   <button class="danger" onclick="rejectAdmin('${esc(a.id)}')">❌ Reject</button>`;
+    } else if(st === "active") {
+        buttons = `<button class="danger" onclick="deactivateAdmin('${esc(a.id)}')">🚫 Deactive</button>`;
+    } else {
+        buttons = `<button class="success" onclick="activateAdminAccount('${esc(a.id)}')">✅ Activate</button>`;
+    }
+    return `<div class="device-card" style="border-left:4px solid ${st === 'active' ? 'var(--danger)' : st === 'pending' ? 'var(--warning)' : 'var(--gray-light)'};">
+        <div class="device-info">
+            <h4>🔐 ${esc(a.name)} <span style="font-size:12px;color:#94a3b8;">(${esc(a.id)})</span></h4>
+            <p>Password: <code>${esc(a.password)}</code> | Status: ${badge} | Devices online: <strong>${live.length}</strong></p>
+            <p style="font-size:12px;color:#64748b;margin-top:4px;">Devices: ${devices}</p>
+            <p style="font-size:12px;color:#64748b;margin-top:4px;">Banaya: ${esc(new Date(a.created || Date.now()).toLocaleString())}</p>
+        </div>
+        <div class="device-status">
+            ${buttons}
+            <button class="warning" onclick="renameAdminAccount('${esc(a.id)}')">✏️ Naam</button>
+            <button class="warning" onclick="changeAdminPassword('${esc(a.id)}')">🔑 Password</button>
+            <button class="edit-btn" onclick="deleteAdminAccount('${esc(a.id)}')">🗑 Delete</button>
+        </div>
+    </div>`;
+}
+
+function renderDevicePanel() {
+    const accEl = document.getElementById('adminAccountsList');
+    const pendingEl = document.getElementById('pendingAdminsList');
+    const viewerEl = document.getElementById('activeDevicesList');
+    if(role !== "head") {
+        if(accEl) accEl.innerHTML = '';
+        if(pendingEl) pendingEl.innerHTML = '';
+        if(viewerEl) viewerEl.innerHTML = '<div class="empty-state" style="padding:30px;">⚠️ Sirf Head Admin is panel ko dekh sakhta hai.</div>';
+        return;
+    }
+    const accounts = readAdminAccounts();
+    const pendingAcc = accounts.filter(function(a){ return (a.status || "pending") === "pending"; });
+    const activeAcc  = accounts.filter(function(a){ return a.status === "active"; });
+    const deactiveAcc = accounts.filter(function(a){ return a.status === "deactive"; });
+
+    // Summary counts
+    const totalAdmins = accounts.length;
+    const totalActive = activeAcc.length;
+    const totalPending = pendingAcc.length;
+    const totalDeactive = deactiveAcc.length;
+
+    if(pendingEl) {
+        if(pendingAcc.length === 0) {
+            pendingEl.innerHTML = '<div class="empty-state" style="padding:18px;color:#94a3b8;">Filhal koi nayi admin request pending nahi hai.</div>';
+        } else {
+            pendingEl.innerHTML = '<div style="margin-bottom:10px;font-size:13px;color:var(--warning);font-weight:600;">⏳ ' + pendingAcc.length + ' request(s) pending</div>' + pendingAcc.map(function(a){
+                const s = readSessions().filter(function(x){ return x.role === 'admin' && x.adminId === a.id; })[0] || {};
+                return `<div class="device-card" style="border-left:4px solid var(--warning);">
+                    <div class="device-info" style="flex:1;min-width:200px;">
+                        <h4>⏳ ${esc(a.name)} <span style="font-size:12px;color:#94a3b8;">(nayi request)</span></h4>
+                        <p>Device: <code>${esc(s.deviceId || '-')}</code> | Platform: ${esc(s.platform || 'Unknown')}</p>
+                        <p style="font-size:12px;color:#64748b;margin-top:4px;">Login waqt: ${esc(new Date(s.loginTime || s.lastActive || Date.now()).toLocaleString())}</p>
+                    </div>
+                    <div class="device-status" style="flex-wrap:wrap;gap:8px;">
+                        <button class="success" onclick="approveAdmin('${esc(a.id)}')">✅ Approve</button>
+                        <button class="danger" onclick="rejectAdmin('${esc(a.id)}')">❌ Reject</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    if(accEl) {
+        let html = '';
+        // Summary bar
+        html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+            <span style="font-size:13px;"><strong>Total:</strong> ${totalAdmins}</span>
+            <span style="font-size:13px;color:var(--success);"><strong>Active:</strong> ${totalActive}</span>
+            <span style="font-size:13px;color:var(--warning);"><strong>Pending:</strong> ${totalPending}</span>
+            <span style="font-size:13px;color:var(--danger);"><strong>Deactive:</strong> ${totalDeactive}</span>
+        </div>`;
+        if(accounts.length === 0) {
+            html += '<div class="empty-state" style="padding:20px;color:#94a3b8;">Koi admin account nahi bana. Upar se naya admin banao.</div>';
+        } else {
+            if(activeAcc.length) {
+                html += '<h4 style="font-size:14px;color:var(--success);margin:4px 0 10px;font-weight:700;">🟢 Active Admins (' + activeAcc.length + ')</h4>' + activeAcc.map(accountCard).join('');
+            }
+            if(deactiveAcc.length) {
+                html += '<h4 style="font-size:14px;color:var(--danger);margin:16px 0 10px;font-weight:700;">🔴 Deactive Admins (' + deactiveAcc.length + ')</h4>' + deactiveAcc.map(accountCard).join('');
+            }
+        }
+        accEl.innerHTML = html;
+    }
+
+    // Viewers / devices
+    if(viewerEl) {
+        const sessions = getAllSessions();
+        const allViewerSessions = sessions.filter(function(s){ return s.role === 'viewer'; });
+        const activeViewers = allViewerSessions.filter(function(s){ return statusOf(s) === 'active'; });
+        const deactiveViewers = allViewerSessions.filter(function(s){ return statusOf(s) === 'deactive'; });
+        let html = '';
+
+        // Viewer summary
+        html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+            <span style="font-size:13px;"><strong>Total Viewers:</strong> ${allViewerSessions.length}</span>
+            <span style="font-size:13px;color:var(--success);"><strong>Active:</strong> ${activeViewers.length}</span>
+            <span style="font-size:13px;color:var(--danger);"><strong>Deactive:</strong> ${deactiveViewers.length}</span>
+        </div>`;
+
+        if(activeViewers.length === 0) {
+            html += '<div class="empty-state" style="padding:20px;color:#94a3b8;">Koi viewer/device login nahi hai.</div>';
+        } else {
+            html += '<h4 style="font-size:14px;color:var(--success);margin:4px 0 10px;font-weight:700;">🟢 Active Viewers</h4>';
+            html += activeViewers.map(function(s){
+                return `<div class="device-card" style="border-left:4px solid var(--success);">
+                    <div class="device-info" style="flex:1;min-width:200px;">
+                        <h4>👁 Viewer - ${esc(s.deviceId).substring(0, 25)}</h4>
+                        <p>Platform: ${esc(s.platform || 'Unknown')} | Screen: ${esc(s.screenSize || 'Unknown')}</p>
+                        <p style="font-size:12px;color:#64748b;margin-top:4px;">Last active: ${getTimeAgo(new Date(s.lastActive))}</p>
+                    </div>
+                    <div class="device-status" style="flex-wrap:wrap;gap:8px;">
+                        <span class="badge online-badge"><span class="status-dot online"></span> Online</span>
+                        <button class="danger" onclick="deactivateDevice('${esc(s.deviceId)}')">🚫 Deactive</button>
+                        <button class="warning" onclick="removeDevice('${esc(s.deviceId)}')">🗑 Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        if(deactiveViewers.length > 0) {
+            html += '<h4 style="font-size:14px;color:var(--danger);margin:16px 0 10px;font-weight:700;">🔴 Deactive / Blocked Viewers</h4>';
+            html += deactiveViewers.map(function(s){
+                return `<div class="device-card" style="border-left:4px solid var(--danger);opacity:0.7;">
+                    <div class="device-info" style="flex:1;min-width:200px;">
+                        <h4>📱 ${esc(s.deviceId).substring(0, 25)}</h4>
+                        <p>Platform: ${esc(s.platform || 'Unknown')}</p>
+                        <p style="font-size:12px;color:#64748b;margin-top:4px;">Last active: ${getTimeAgo(new Date(s.lastActive))}</p>
+                    </div>
+                    <div class="device-status" style="flex-wrap:wrap;gap:8px;">
+                        <span class="badge offline-badge"><span class="status-dot offline"></span> Deactive</span>
+                        <button class="success" onclick="activateDevice('${esc(s.deviceId)}')">✅ Activate</button>
+                        <button class="warning" onclick="removeDevice('${esc(s.deviceId)}')">🗑 Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        viewerEl.innerHTML = html;
+    }
+    renderApproveEachToggle();
+    updatePendingBadge();
+    updateMasterPwDisplay();
+}
+
+function updatePendingBadge() {
+    const b = document.getElementById('pendingBadge');
+    if(!b) return;
+    const n = getAllSessions().filter(function(s){ return s.role === 'admin' && statusOf(s) === 'pending'; }).length;
+    b.innerText = n;
+    b.style.display = n > 0 ? 'inline-block' : 'none';
+}
+
+/* ---- Head Admin actions (account based) ---- */
+function approveAdmin(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) { showMsg('Admin account nahi mila.'); return; }
+    setAccountStatus(accId, "active");
+    renderDevicePanel();
+    showMsg('✅ ' + acc.name + ' approve ho gaya. Ab wo system use kar sakta hai.');
+}
+function rejectAdmin(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) return;
+    askConfirm(acc.name + ' ki request reject kar dein? Usay dobara login karna hoga.', function(){
+        setAccountStatus(accId, "deactive");
+        renderDevicePanel();
+        showMsg('❌ ' + acc.name + ' ki request reject kar di gayi.', "warn");
+    }, "Request Reject");
+}
+
+function deactivateAdmin(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) { showMsg('Admin account nahi mila.', 'err'); return; }
+    askConfirm(acc.name + ' ko deactive kar dein? Us ka system foran lock ho jayega. Agar wo kisi aur device/tab par logged in hai, to wahan bhi foran logout ho jayega.', function(){
+        setAccountStatus(accId, "deactive");
+        // Force logout flag set karo taake immediately logout ho
+        setForceLogoutFlag(accId, acc.name);
+        renderDevicePanel();
+        showMsg('🚫 ' + acc.name + ' deactive kar diya gaya. Sab devices se logout ho gaya.', "warn");
+    }, "Admin Deactivate");
+}
+
+function activateAdminAccount(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) return;
+    setAccountStatus(accId, "active");
+    renderDevicePanel();
+    showMsg('✅ ' + acc.name + ' activate kar diya gaya.');
+}
+function renameAdminAccount(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) return;
+    askText('Naya naam likhein:', acc.name, function(val){
+        const nn = clean(val || '');
+        if(!nn) return;
+        const dup = findAdminAccountByName(nn);
+        if(dup && dup.id !== accId) { showMsg('Ye naam pehle se mojood hai.', "err"); return; }
+        acc.name = nn;
+        saveAdminAccountUpdate(acc);
+        const sessions = readSessions();
+        sessions.forEach(function(x){ if(x.role === 'admin' && x.adminId === accId) x.name = nn; });
+        writeSessions(sessions);
+        renderDevicePanel();
+        showMsg('Naam update ho gaya.', "ok");
+    });
+}
+
+function changeAdminPassword(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) return;
+    askText(acc.name + ' ka naya password likhein:', acc.password, function(val){
+        const np = String(val || '').trim();
+        if(!np) return;
+        if(np.length < 4) { showMsg('Password kam az kam 4 characters ka rakhein.', "err"); return; }
+        if(np.toLowerCase() === HEAD_ADMIN_PASSWORD.toLowerCase()) { showMsg('Ye Head Admin ka password hai, alag rakhein.', "err"); return; }
+        acc.password = np;
+        saveAdminAccountUpdate(acc);
+        renderDevicePanel();
+        showMsg('Password update ho gaya.', "ok");
+    });
+}
+
+function deleteAdminAccount(accId) {
+    if(!checkHead()) return;
+    const acc = findAdminAccount(accId);
+    if(!acc) return;
+    askConfirm(acc.name + ' ka account hamesha ke liye delete karna hai?', function(){
+        writeAdminAccounts(readAdminAccounts().filter(function(a){ return a.id !== accId; }));
+        writeSessions(readSessions().filter(function(x){ return !(x.role === 'admin' && x.adminId === accId); }));
+        renderDevicePanel();
+        showMsg('🗑 Account delete ho gaya.', "ok");
+    }, "Account Delete");
+}
+
+function addAdminAccountManual() {
+    if(!checkHead()) return;
+    const name = clean(document.getElementById('newAdminName').value);
+    const pw = String(document.getElementById('newAdminPass').value || '').trim();
+    if(!name || !pw) { showMsg('Naam aur password dono likhein.'); return; }
+    if(pw.length < 4) { showMsg('Password kam az kam 4 characters ka rakhein.'); return; }
+    if(pw.toLowerCase() === HEAD_ADMIN_PASSWORD.toLowerCase()) { showMsg('Ye Head Admin ka password hai, alag rakhein.'); return; }
+    if(findAdminAccountByName(name)) { showMsg('Ye naam pehle se mojood hai.'); return; }
+    const acc = { id: nextAdminAccId(), name: name, password: pw, status: "active", created: new Date().toISOString(), manual: true };
+    saveAdminAccountUpdate(acc);
+    document.getElementById('newAdminName').value = '';
+    document.getElementById('newAdminPass').value = '';
+    renderDevicePanel();
+    showMsg('✅ Naya Admin account ban gaya (seedha active).');
+}
+function toggleApproveEach() {
+    if(!checkHead()) return;
+    setApproveEachLogin(!approveEachLogin());
+    renderApproveEachToggle();
+}
+function renderApproveEachToggle() {
+    const b = document.getElementById('approveEachBtn');
+    if(!b) return;
+    const on = approveEachLogin();
+    b.innerText = on ? '🔁 Har login par approval: ON' : '🔁 Har login par approval: OFF';
+    b.className = on ? 'success' : 'warning';
+}
+
+function deactivateDevice(id) {
+    if(!checkHead()) return;
+    askConfirm('Is Viewer ko deactivate karna chahte hain? Us ka system foran lock ho jayega.', function(){
+        setStatus(id, "deactive");
+        renderDevicePanel();
+        showMsg('Viewer deactivated!', "warn");
+    }, "Viewer Deactivate");
+}
+
+function activateDevice(id) {
+    if(!checkHead()) return;
+    setStatus(id, "active");
+    renderDevicePanel();
+    showMsg('✅ Device activate kar diya gaya.');
+}
+function removeDevice(id) {
+    if(!checkHead()) return;
+    askConfirm('Is device ka record hamesha ke liye delete karna hai?', function(){
+        deleteSession(id);
+        renderDevicePanel();
+        showMsg('🗑 Record delete ho gaya.', "ok");
+    }, "Device Delete");
+}
+
+function clearAllSessions() {
+    if(!checkHead()) return;
+    askConfirm('⚠️ Sab Admins aur Viewers ko force logout karna hai? Sab devices ko dobara login karna hoga.', function(){
+        writeSessions(readSessions().filter(function(s){ return s.role === 'head'; }));
+        renderDevicePanel();
+        showMsg('✅ Sab Admins aur Viewers force logout ho gaye hain!', "ok");
+    }, "Force Logout All");
+}
+
+function getTimeAgo(date) {
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if(isNaN(diff)) return '-';
+    if(diff < 0) return 'Just now';
+    if(diff < 60) return 'Just now';
+    if(diff < 3600) return Math.floor(diff / 60) + ' min ago';
+    if(diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+    return Math.floor(diff / 86400) + ' days ago';
+}
+
+/* ================= BACKUP & RESTORE ================= */
+function backupData() {
+    if(!checkAdmin()) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({students:students,nextTestId:nextTestId,attendance:attendance})],{type:"application/json"}));
+    a.download = "elite-college-backup-" + new Date().toISOString().slice(0,10) + ".json";
+    a.click();
+}
+function restoreData(e) {
+    if(!checkAdmin()) return;
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = function(){
+        try { const d = JSON.parse(r.result); if(!Array.isArray(d.students)) throw 0;
+        students = d.students; nextTestId = d.nextTestId || 10; attendance = d.attendance || {};
+        saveData(); location.reload(); } catch(x) { showMsg("Invalid backup file."); }
+    };
+    r.readAsText(f);
+}
+
+/* ================= AI ASSISTANT ================= */
+(function(){
+const H=[];let busy=0;
+const $=function(i){return document.getElementById(i);};
+function add(c,t){const d=document.createElement("div");d.className="aim "+c;d.textContent=t;$("aiMsgs").appendChild(d);$("aiMsgs").scrollTop=1e9;return d;}
+async function samp(){try{return window.claude?await claude.use("sample"):null;}catch(e){return null;}}
+function data(){const mi=new Date().getMonth();return students.map(function(s){const ds=Object.keys(attendance),at=ds.map(function(d){return attendance[d][s.id];}).filter(Boolean);return{id:s.id,name:s.name,class:s.cls,active:s.active,monthlyFee:s.fee,paidMonths:MONTHS.filter(function(m){return s.payments[m];}),unpaidMonthsUpToNow:MONTHS.filter(function(m,i){return i<=mi&&!s.payments[m];}),avgTestPercent:getStudentAvgPercentage(s),tests:(s.testResults||[]).map(function(t){return t.month+" "+t.subject+" "+t.obtainedMarks+"/"+t.totalMarks;}),attendance:{present:at.filter(function(x){return x==="P";}).length,absent:at.filter(function(x){return x==="A";}).length,leave:at.filter(function(x){return x==="L";}).length,absentDates:ds.filter(function(d){return attendance[d][s.id]==="A";})}};});}
+function local(q){
+const l=q.toLowerCase(),w=l.split(/[^a-z0-9]+/),now=MONTHS[new Date().getMonth()],mo=MONTHS.find(function(m){return w.includes(m.toLowerCase())||w.includes(m.slice(0,3).toLowerCase());})||now,act=students.filter(function(s){return s.active;}),pc=getStudentAvgPercentage,has=function(){return Array.prototype.some.call(arguments,function(k){return l.includes(k);});},
+ls=function(a){return a.length?a.map(function(s){return "• "+s.name+" ("+s.cls+")";}).join("\n"):"Koi nahi / None";},
+fs=function(a){return a.reduce(function(t,s){return t+s.fee;},0).toLocaleString();},
+tested=function(a){return a.filter(function(s){return (s.testResults||[]).length;});},
+hit0=students.filter(function(s){return s.name.toLowerCase().split(" ").some(function(p){return p.length>2&&w.includes(p);});}).slice(0,3),
+fh=students.filter(function(s){return l.includes(s.name.toLowerCase());}),hit=fh.length?fh:hit0;
+if(hit.length)return hit.map(function(s){const g=pc(s);return s.name+" ("+s.id+")\nClass: "+s.cls+" | "+(s.active?"Active":"Deactive")+"\nFee: Rs. "+s.fee.toLocaleString()+" | "+mo+": "+(s.payments[mo]?"Paid":"Pending")+"\nPaid months: "+countPaidMonths(s)+"/12\nTests: "+(s.testResults||[]).length+" | Average: "+g+"% (Grade "+calculateGrade(g)+")";}).join("\n\n");
+if(has("pending","unpaid","baqaya","baqi","due","nahi di")){const p=act.filter(function(s){return !s.payments[mo];});return "Pending fees in "+mo+":\n"+ls(p)+"\nTotal due: Rs. "+fs(p);}
+if(has("collect","paid","jama","wasool")){const p=act.filter(function(s){return s.payments[mo];});return "Fees collected in "+mo+": Rs. "+fs(p)+"\n"+ls(p);}
+if(has("top","best","topper","behtar","position")){const t=tested(act).sort(function(a,b){return pc(b)-pc(a);})[0];return t?"Top student: "+t.name+" ("+pc(t)+"%, Grade "+calculateGrade(pc(t))+")":"No test results yet.";}
+if(has("weak","fail","kamzor","low","risk"))return "Students below 50% average:\n"+ls(tested(act).filter(function(s){return pc(s)<50;}));
+if(has("attendance","hazri","absent","present","leave")){const t=new Date().toISOString().slice(0,10),d=attendance[t]?t:Object.keys(attendance).sort().pop();if(!d)return "No attendance marked yet.";const r=attendance[d],n=function(k){return act.filter(function(s){return r[s.id]===k;});};return "Attendance on "+d+":\nPresent: "+n("P").length+", Absent: "+n("A").length+", Leave: "+n("L").length+"\nAbsent students:\n"+ls(n("A"));}
+if(has("average","avg","result","test","marks")){const all=[];students.forEach(function(s){(s.testResults||[]).forEach(function(t){all.push(calculatePercentage(t.obtainedMarks,t.totalMarks));});});return all.length?"Total tests: "+all.length+"\nOverall average: "+Math.round(all.reduce(function(a,b){return a+b;},0)/all.length)+"%":"No test results yet.";}
+if(has("how many","kitne","total","count","student"))return "Total students: "+students.length+"\nActive: "+act.length+"\nDeactive: "+(students.length-act.length);
+return "Main in cheezon ka jawab de sakta hoon:\n Pending fees (month ke saath, e.g. March)\n• Top student / weak students\n• Aaj ki attendance\n• Kisi student ka naam likhein, uski details milengi\n• Total students";
+}
+window.aiLocal=local;
+window.aiToggle=async function(){
+$("aiBox").classList.toggle("open");
+if(aiToggle.i)return;
+aiToggle.i=1;
+add("bot","Assalam o Alaikum! Main Elite College ka assistant hoon. Students, fees, results ya attendance ke bare mein poochein (English ya Roman Urdu).");
+["Pending fees this month","Top student","Today's attendance","How many students?"].forEach(function(t){const b=document.createElement("button");b.textContent=t;b.onclick=function(){$("aiIn").value=t;aiSend();};$("aiChips").appendChild(b);});
+$("aiMode").textContent=(await samp())?"Claude AI":"Offline mode";
+};
+window.aiSend=async function(){
+const q=$("aiIn").value.trim();if(!q||busy)return;
+$("aiIn").value="";add("me",q);const b=add("bot","...");busy=1;let a=null;
+try{const sm=await samp();
+if(sm){const n=new Date(),ctx="You are the assistant inside Elite College management software. Answer ONLY from the DATA. Reply in the language the user writes (English or Roman Urdu), short, plain text, no tables. If the data does not contain the answer, say so. Today: "+n.toISOString().slice(0,10)+", current month: "+MONTHS[n.getMonth()]+". DATA: "+JSON.stringify(data());
+a=(await sm(H.slice(-6).concat([{role:"user",content:ctx+"\n\nQuestion: "+q}]),{cache:false,modelTier:"quick",onText:function(o){b.textContent=o.text;}})).text;}
+}catch(e){a=null;}
+a=a||local(q);b.textContent=a;H.push({role:"user",content:q},{role:"assistant",content:a});busy=0;$("aiMsgs").scrollTop=1e9;
+};
+})();
+
+/* ================= INIT ================= */
+document.getElementById("attendanceDate").value = new Date().toISOString().split("T")[0];
+let currentMonthName = MONTHS[new Date().getMonth()];
+document.getElementById("feeMonth").value = currentMonthName;
+document.getElementById("reportMonth").value = currentMonthName;
+if(document.getElementById("testMonthSelect")) document.getElementById("testMonthSelect").value = currentMonthName;
+
+// Auto login if session exists
+const autoOk = autoLogin();
+if(!autoOk) { updateDashboard(); renderStudents(); }
+
+// Cross-tab sync start karo
+initSyncChannel();
+
+/* Head Admin: pending requests ka live badge + panel auto-refresh */
+setInterval(function(){
+    if(role !== "head") return;
+    updatePendingBadge();
+    const panel = document.getElementById("devicePanel");
+    if(panel && panel.classList.contains("active")) renderDevicePanel();
+}, 5000);
+
+/* ================= SESSION TIMEOUT (Head/Admin only) ================= */
+(function(){
+let last = Date.now();
+["click","keydown","mousemove","touchstart"].forEach(function(e){
+    document.addEventListener(e, function(){ last = Date.now(); }, {passive:true});
+});
+setInterval(function(){
+    if(!isApproved) return;
+    if(role === "head" && Date.now() - last > 1800000){
+        logout(); showMsg("Session ended after 30 minutes of inactivity. Please login again.");
+    }
+}, 30000);
+})();
+</script>
+</body>
+</html>
